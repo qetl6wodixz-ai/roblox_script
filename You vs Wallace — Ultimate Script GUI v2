@@ -1,11 +1,11 @@
 --[[
-    ╔══════════════════════════════════════════╗
-    ║     YOU vs WALLACE — Ultimate Script     ║
-    ║              Version 2.0                 ║
-    ║    Super Detailed & Beautiful Edition    ║
-    ╚══════════════════════════════════════════╝
+    ╔══════════════════════════════════════════════╗
+    ║   YOU vs WALLACE — ADDON PACK v2.1           ║
+    ║   Wallace ESP Red, Aimbot, Egg ESP,          ║
+    ║   Shaders, Greeting, K to Close, etc.        ║
+    ║                                              ║
+    ╚══════════════════════════════════════════════╝
 ]]
-
 -- === СЕРВИСЫ ===
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -2028,4 +2028,3189 @@ print("════════════════════════�
 print("  🧀 YOU vs WALLACE Ultimate v2.0")
 print("  ✅ All systems operational")
 print("  ⌨️  Press F9 to toggle GUI")
+print("═══════════════════════════════════════")
+--[[
+    ╔══════════════════════════════════════════════╗
+    ║   YOU vs WALLACE — ADDON PACK v2.1          ║
+    ║   Wallace ESP Red, Aimbot, Egg ESP,         ║
+    ║   Shaders, Greeting, K to Close, etc.       ║
+    ║   ➜ Вставить ПОСЛЕ основного скрипта        ║
+    ╚══════════════════════════════════════════════╝
+]]
+
+-- =============================================
+-- === ADDON: ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
+-- =============================================
+
+local Addon = {
+    AimbotEnabled = false,
+    AimbotTarget = nil,
+    EggESPEnabled = false,
+    EggESPObjects = {},
+    ShaderEnabled = false,
+    WallaceESPEnabled = false,
+    GreetingShown = false,
+    FarmCheeseCooldown = 0.5, -- 500 миллисекунд
+    FarmCheeseCoolingDown = false,
+}
+
+local WALLACE_SPAWN_POS = Vector3.new(1580.00, 510.00, -200.00)
+
+-- =============================================
+-- === ADDON: УЛУЧШЕНИЕ ПЛАВНОСТИ GUI ===
+-- =============================================
+
+-- Глобальная плавность для всех Frame
+local function enhanceSmoothness()
+    local function applySmooth(obj)
+        if obj:IsA("Frame") or obj:IsA("ScrollingFrame") then
+            -- Плавные переходы для всех фреймов
+            if not obj:FindFirstChild("_smoothed") then
+                local tag = Instance.new("BoolValue")
+                tag.Name = "_smoothed"
+                tag.Parent = obj
+            end
+        end
+        if obj:IsA("TextButton") then
+            obj.AutoButtonColor = false
+        end
+    end
+    
+    for _, obj in ipairs(ScreenGui:GetDescendants()) do
+        applySmooth(obj)
+    end
+end
+
+pcall(enhanceSmoothness)
+
+-- Добавление мягкой тени ко всем карточкам
+local function addInnerGlow()
+    for _, frame in ipairs(ScreenGui:GetDescendants()) do
+        if frame:IsA("Frame") and frame.Name:find("BtnFrame") or 
+           frame:IsA("Frame") and frame.Name:find("ToggleFrame") then
+            if not frame:FindFirstChild("InnerGlow") then
+                local glow = Instance.new("ImageLabel")
+                glow.Name = "InnerGlow"
+                glow.Size = UDim2.new(1, 8, 1, 8)
+                glow.Position = UDim2.new(0, -4, 0, -4)
+                glow.BackgroundTransparency = 1
+                glow.Image = "rbxassetid://6015897843"
+                glow.ImageColor3 = C.Gold
+                glow.ImageTransparency = 0.95
+                glow.ScaleType = Enum.ScaleType.Slice
+                glow.SliceCenter = Rect.new(49, 49, 450, 450)
+                glow.ZIndex = 0
+                glow.Parent = frame
+            end
+        end
+    end
+end
+
+pcall(addInnerGlow)
+
+-- =============================================
+-- === ADDON: ПЕРЕОПРЕДЕЛЕНИЕ ESP ДЛЯ WALLACE ===
+-- =============================================
+
+-- Сохраняем оригинальную функцию
+local _originalCreateESP = createESPForPlayer
+
+-- Новая функция ESP с определением Wallace
+local function createESPForPlayerV2(player)
+    if player == LocalPlayer then return end
+    removeESP(player)
+    
+    local character = player.Character
+    if not character then return end
+    
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not hrp or not humanoid then return end
+    
+    local data = {}
+    
+    -- Определение: является ли это Wallace
+    local isWallace = false
+    local playerNameLower = player.Name:lower()
+    local displayNameLower = player.DisplayName:lower()
+    
+    if playerNameLower:find("wallace") or displayNameLower:find("wallace") then
+        isWallace = true
+    end
+    
+    -- Проверка по модели/NPC
+    local charNameLower = character.Name:lower()
+    if charNameLower:find("wallace") then
+        isWallace = true
+    end
+    
+    -- Цвета в зависимости от Wallace
+    local espBaseColor = isWallace and C.Red or C.ESPMid
+    local espNamePrefix = isWallace and "⚠️ WALLACE" or ("⚡ " .. player.Name)
+    local espFillAlpha = isWallace and 0.5 or 0.75
+    
+    -- Billboard GUI
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "ESP_BB_V2"
+    bb.Size = UDim2.new(0, 240, 0, 75)
+    bb.StudsOffset = Vector3.new(0, 4, 0)
+    bb.AlwaysOnTop = true
+    bb.Adornee = hrp
+    bb.MaxDistance = 2000
+    bb.Parent = hrp
+    data.billboard = bb
+    
+    -- Контейнер с фоном
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 0, 70)
+    container.BackgroundTransparency = 1
+    container.Parent = bb
+    
+    -- Бейдж имени
+    local nameBg = Instance.new("Frame")
+    nameBg.Size = UDim2.new(0.85, 0, 0, 24)
+    nameBg.Position = UDim2.new(0.075, 0, 0, 0)
+    nameBg.BackgroundColor3 = isWallace and Color3.fromRGB(80, 15, 15) or C.BgDark
+    nameBg.BackgroundTransparency = 0.25
+    nameBg.BorderSizePixel = 0
+    nameBg.Parent = container
+    Instance.new("UICorner", nameBg).CornerRadius = UDim.new(0, 6)
+    
+    local nameStroke = Instance.new("UIStroke")
+    nameStroke.Color = espBaseColor
+    nameStroke.Thickness = isWallace and 2 or 1
+    nameStroke.Transparency = isWallace and 0 or 0.4
+    nameStroke.Parent = nameBg
+    
+    -- Иконка предупреждения для Wallace
+    if isWallace then
+        local warnIcon = Instance.new("TextLabel")
+        warnIcon.Size = UDim2.new(0, 20, 0, 20)
+        warnIcon.Position = UDim2.new(0, 4, 0.5, -10)
+        warnIcon.BackgroundTransparency = 1
+        warnIcon.Text = "💀"
+        warnIcon.TextSize = 14
+        warnIcon.Font = Enum.Font.SourceSans
+        warnIcon.Parent = nameBg
+    end
+    
+    local nameLbl = Instance.new("TextLabel")
+    nameLbl.Size = UDim2.new(1, isWallace and -28 or -8, 1, 0)
+    nameLbl.Position = UDim2.new(0, isWallace and 24 or 4, 0, 0)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Text = espNamePrefix
+    nameLbl.TextColor3 = espBaseColor
+    nameLbl.TextSize = isWallace and 13 or 12
+    nameLbl.Font = Enum.Font.GothamBold
+    nameLbl.TextStrokeTransparency = 0.2
+    nameLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLbl.Parent = nameBg
+    
+    -- Расстояние
+    local distLbl = Instance.new("TextLabel")
+    distLbl.Size = UDim2.new(1, 0, 0, 14)
+    distLbl.Position = UDim2.new(0, 0, 0, 27)
+    distLbl.BackgroundTransparency = 1
+    distLbl.Text = "📏 0m"
+    distLbl.TextColor3 = C.TextLight
+    distLbl.TextSize = 10
+    distLbl.Font = Enum.Font.Gotham
+    distLbl.TextStrokeTransparency = 0.2
+    distLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distLbl.Parent = container
+    
+    -- HP бар фон
+    local hpBg = Instance.new("Frame")
+    hpBg.Size = UDim2.new(0.7, 0, 0, 7)
+    hpBg.Position = UDim2.new(0.15, 0, 0, 44)
+    hpBg.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    hpBg.BackgroundTransparency = 0.2
+    hpBg.BorderSizePixel = 0
+    hpBg.Parent = container
+    Instance.new("UICorner", hpBg).CornerRadius = UDim.new(1, 0)
+    
+    local hpStroke = Instance.new("UIStroke")
+    hpStroke.Color = Color3.fromRGB(60, 60, 60)
+    hpStroke.Thickness = 1
+    hpStroke.Transparency = 0.5
+    hpStroke.Parent = hpBg
+    
+    -- HP заполнение
+    local hpFill = Instance.new("Frame")
+    hpFill.Size = UDim2.new(1, 0, 1, 0)
+    hpFill.BackgroundColor3 = C.Green
+    hpFill.BorderSizePixel = 0
+    hpFill.Parent = hpBg
+    Instance.new("UICorner", hpFill).CornerRadius = UDim.new(1, 0)
+    
+    local hpGradient = Instance.new("UIGradient")
+    hpGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(200, 200, 200)),
+    }
+    hpGradient.Rotation = 90
+    hpGradient.Parent = hpFill
+    
+    -- HP текст
+    local hpLbl = Instance.new("TextLabel")
+    hpLbl.Size = UDim2.new(1, 0, 0, 12)
+    hpLbl.Position = UDim2.new(0, 0, 0, 54)
+    hpLbl.BackgroundTransparency = 1
+    hpLbl.Text = "❤️ 100/100"
+    hpLbl.TextColor3 = C.Green
+    hpLbl.TextSize = 9
+    hpLbl.Font = Enum.Font.GothamBold
+    hpLbl.TextStrokeTransparency = 0.2
+    hpLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    hpLbl.Parent = container
+    
+    -- Highlight
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_HL_V2"
+    highlight.FillColor = espBaseColor
+    highlight.FillTransparency = espFillAlpha
+    highlight.OutlineColor = espBaseColor
+    highlight.OutlineTransparency = isWallace and 0 or 0.1
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = character
+    data.highlight = highlight
+    
+    -- Пульсация для Wallace
+    if isWallace then
+        spawn(function()
+            while State.ESPEnabled and character and character.Parent do
+                tweenProperty(nameStroke, {Transparency = 0.6}, 0.8, Enum.EasingStyle.Sine)
+                tweenProperty(highlight, {OutlineTransparency = 0.5}, 0.8, Enum.EasingStyle.Sine)
+                task.wait(0.8)
+                tweenProperty(nameStroke, {Transparency = 0}, 0.8, Enum.EasingStyle.Sine)
+                tweenProperty(highlight, {OutlineTransparency = 0}, 0.8, Enum.EasingStyle.Sine)
+                task.wait(0.8)
+            end
+        end)
+    end
+    
+    -- Обновление данных
+    local updateConn = RunService.RenderStepped:Connect(function()
+        if not State.ESPEnabled or not character or not character.Parent then
+            removeESP(player)
+            return
+        end
+        
+        local currentHRP = character:FindFirstChild("HumanoidRootPart")
+        local currentHum = character:FindFirstChildOfClass("Humanoid")
+        local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        
+        if currentHRP and localHRP then
+            local dist = math.floor((currentHRP.Position - localHRP.Position).Magnitude)
+            distLbl.Text = "📏 " .. dist .. " studs"
+            
+            if not isWallace then
+                if dist < 25 then
+                    nameLbl.TextColor3 = C.ESPNear
+                    highlight.OutlineColor = C.ESPNear
+                    highlight.FillColor = C.ESPNear
+                    nameStroke.Color = C.ESPNear
+                elseif dist < 60 then
+                    nameLbl.TextColor3 = C.ESPMid
+                    highlight.OutlineColor = C.ESPMid
+                    highlight.FillColor = C.ESPMid
+                    nameStroke.Color = C.ESPMid
+                else
+                    nameLbl.TextColor3 = C.ESPFar
+                    highlight.OutlineColor = C.ESPFar
+                    highlight.FillColor = C.ESPFar
+                    nameStroke.Color = C.ESPFar
+                end
+            end
+            
+            -- Предупреждение для Wallace
+            if isWallace and dist < 40 then
+                distLbl.Text = "⚠️ DANGER! " .. dist .. " studs"
+                distLbl.TextColor3 = C.Red
+            elseif isWallace then
+                distLbl.TextColor3 = C.Orange
+            end
+        end
+        
+        if currentHum then
+            local ratio = math.clamp(currentHum.Health / currentHum.MaxHealth, 0, 1)
+            hpFill.Size = UDim2.new(ratio, 0, 1, 0)
+            hpLbl.Text = "❤️ " .. math.floor(currentHum.Health) .. "/" .. math.floor(currentHum.MaxHealth)
+            
+            if ratio < 0.3 then
+                hpFill.BackgroundColor3 = C.Red
+                hpLbl.TextColor3 = C.Red
+            elseif ratio < 0.6 then
+                hpFill.BackgroundColor3 = C.Orange
+                hpLbl.TextColor3 = C.Orange
+            else
+                hpFill.BackgroundColor3 = C.Green
+                hpLbl.TextColor3 = C.Green
+            end
+        end
+    end)
+    
+    data.updateConn = updateConn
+    espObjects[player] = data
+end
+
+-- Патчим ESP
+createESPForPlayer = createESPForPlayerV2
+
+-- Также ищем NPC Wallace в workspace
+local function createWallaceNPCESP()
+    local function scanForWallace(parent)
+        for _, obj in ipairs(parent:GetChildren()) do
+            local nameLower = obj.Name:lower()
+            if nameLower:find("wallace") and obj:IsA("Model") then
+                local hrp = obj:FindFirstChild("HumanoidRootPart") or
+                            obj:FindFirstChild("Torso") or
+                            obj:FindFirstChild("Head") or
+                            obj:FindFirstChildWhichIsA("BasePart")
+                
+                if hrp and not obj:FindFirstChild("ESP_WALLACE_NPC") then
+                    -- Highlight для NPC Wallace
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "ESP_WALLACE_NPC"
+                    hl.FillColor = C.Red
+                    hl.FillTransparency = 0.4
+                    hl.OutlineColor = C.Red
+                    hl.OutlineTransparency = 0
+                    hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    hl.Parent = obj
+                    
+                    -- Billboard для NPC Wallace
+                    local bb = Instance.new("BillboardGui")
+                    bb.Name = "ESP_WALLACE_NPC_BB"
+                    bb.Size = UDim2.new(0, 260, 0, 50)
+                    bb.StudsOffset = Vector3.new(0, 5, 0)
+                    bb.AlwaysOnTop = true
+                    bb.Adornee = hrp
+                    bb.Parent = hrp
+                    
+                    local bg = Instance.new("Frame")
+                    bg.Size = UDim2.new(0.9, 0, 0, 28)
+                    bg.Position = UDim2.new(0.05, 0, 0, 0)
+                    bg.BackgroundColor3 = Color3.fromRGB(100, 10, 10)
+                    bg.BackgroundTransparency = 0.2
+                    bg.BorderSizePixel = 0
+                    bg.Parent = bb
+                    Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 6)
+                    
+                    local bgStroke = Instance.new("UIStroke")
+                    bgStroke.Color = C.Red
+                    bgStroke.Thickness = 2
+                    bgStroke.Parent = bg
+                    
+                    local lbl = Instance.new("TextLabel")
+                    lbl.Size = UDim2.new(1, 0, 1, 0)
+                    lbl.BackgroundTransparency = 1
+                    lbl.Text = "💀 WALLACE 💀"
+                    lbl.TextColor3 = C.Red
+                    lbl.TextSize = 15
+                    lbl.Font = Enum.Font.GothamBold
+                    lbl.TextStrokeTransparency = 0
+                    lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    lbl.Parent = bg
+                    
+                    local distLbl2 = Instance.new("TextLabel")
+                    distLbl2.Size = UDim2.new(1, 0, 0, 16)
+                    distLbl2.Position = UDim2.new(0, 0, 0, 30)
+                    distLbl2.BackgroundTransparency = 1
+                    distLbl2.Text = "⚠️ DANGER"
+                    distLbl2.TextColor3 = C.Orange
+                    distLbl2.TextSize = 11
+                    distLbl2.Font = Enum.Font.GothamBold
+                    distLbl2.TextStrokeTransparency = 0.2
+                    distLbl2.TextStrokeColor3 = Color3.new(0, 0, 0)
+                    distLbl2.Parent = bb
+                    
+                    -- Пульсация
+                    spawn(function()
+                        while hl and hl.Parent and State.ESPEnabled do
+                            tweenProperty(bgStroke, {Transparency = 0.7}, 0.6, Enum.EasingStyle.Sine)
+                            tweenProperty(hl, {FillTransparency = 0.7, OutlineTransparency = 0.5}, 0.6, Enum.EasingStyle.Sine)
+                            task.wait(0.6)
+                            tweenProperty(bgStroke, {Transparency = 0}, 0.6, Enum.EasingStyle.Sine)
+                            tweenProperty(hl, {FillTransparency = 0.4, OutlineTransparency = 0}, 0.6, Enum.EasingStyle.Sine)
+                            task.wait(0.6)
+                        end
+                    end)
+                    
+                    -- Обновление расстояния
+                    spawn(function()
+                        while hl and hl.Parent and State.ESPEnabled do
+                            local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                            if localHRP and hrp and hrp.Parent then
+                                local dist = math.floor((hrp.Position - localHRP.Position).Magnitude)
+                                distLbl2.Text = "⚠️ " .. dist .. " studs away"
+                                if dist < 30 then
+                                    distLbl2.TextColor3 = C.Red
+                                    distLbl2.Text = "🚨 VERY CLOSE! " .. dist .. "m"
+                                elseif dist < 60 then
+                                    distLbl2.TextColor3 = C.Orange
+                                end
+                            end
+                            task.wait(0.1)
+                        end
+                    end)
+                end
+            end
+            
+            if #obj:GetChildren() > 0 and not obj:IsA("Player") then
+                scanForWallace(obj)
+            end
+        end
+    end
+    
+    scanForWallace(workspace)
+end
+
+-- Патчим enableESP для добавления Wallace NPC
+local _origEnableESP = enableESP
+enableESP = function()
+    _origEnableESP()
+    createWallaceNPCESP()
+    
+    -- Периодическое сканирование новых Wallace
+    spawn(function()
+        while State.ESPEnabled and State.ScriptActive do
+            createWallaceNPCESP()
+            task.wait(3)
+        end
+    end)
+end
+
+-- =============================================
+-- === ADDON: AIMBOT ===
+-- =============================================
+
+local function getClosestPlayer()
+    local closest = nil
+    local closestDist = math.huge
+    local localChar = LocalPlayer.Character
+    if not localChar then return nil end
+    local localHRP = localChar:FindFirstChild("HumanoidRootPart")
+    if not localHRP then return nil end
+    
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local hrp = player.Character:FindFirstChild("HumanoidRootPart")
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+            if hrp and hum and hum.Health > 0 then
+                local dist = (hrp.Position - localHRP.Position).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = player
+                end
+            end
+        end
+    end
+    
+    -- Также проверяем NPC Wallace
+    local function checkWallaceNPC(parent)
+        for _, obj in ipairs(parent:GetChildren()) do
+            if obj.Name:lower():find("wallace") and obj:IsA("Model") then
+                local hrp = obj:FindFirstChild("HumanoidRootPart") or
+                            obj:FindFirstChild("Head") or
+                            obj:FindFirstChildWhichIsA("BasePart")
+                if hrp then
+                    local dist = (hrp.Position - localHRP.Position).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closest = {Character = obj, Name = "WALLACE"}
+                    end
+                end
+            end
+        end
+    end
+    checkWallaceNPC(workspace)
+    
+    return closest
+end
+
+local aimbotConnection = nil
+
+local function enableAimbot()
+    Addon.AimbotEnabled = true
+    
+    aimbotConnection = RunService.RenderStepped:Connect(function()
+        if not Addon.AimbotEnabled then return end
+        
+        local target = getClosestPlayer()
+        if not target then return end
+        
+        local targetChar = target.Character or target
+        if not targetChar then return end
+        
+        local targetHead = targetChar:FindFirstChild("Head") or
+                          targetChar:FindFirstChild("HumanoidRootPart") or
+                          targetChar:FindFirstChildWhichIsA("BasePart")
+        
+        if not targetHead then return end
+        
+        local cam = workspace.CurrentCamera
+        if cam then
+            local targetPos = targetHead.Position
+            cam.CFrame = CFrame.new(cam.CFrame.Position, targetPos)
+        end
+    end)
+    
+    updateStatus("🎯 Aimbot ENABLED — auto-tracking", C.Red)
+end
+
+local function disableAimbot()
+    Addon.AimbotEnabled = false
+    if aimbotConnection then
+        aimbotConnection:Disconnect()
+        aimbotConnection = nil
+    end
+    updateStatus("🎯 Aimbot DISABLED", C.TextMuted)
+end
+
+-- =============================================
+-- === ADDON: EGG ESP ===
+-- =============================================
+
+local function clearEggESP()
+    for _, obj in ipairs(Addon.EggESPObjects) do
+        if obj and obj.Parent then
+            obj:Destroy()
+        end
+    end
+    Addon.EggESPObjects = {}
+end
+
+local function enableEggESP()
+    Addon.EggESPEnabled = true
+    clearEggESP()
+    
+    local function addEggHighlight(obj)
+        local part = nil
+        if obj:IsA("BasePart") then
+            part = obj
+        elseif obj:IsA("Model") then
+            part = obj.PrimaryPart or obj:FindFirstChildWhichIsA("BasePart")
+        end
+        
+        if not part then return end
+        
+        -- Highlight
+        local hl = Instance.new("Highlight")
+        hl.Name = "EGG_ESP_HL"
+        hl.FillColor = Color3.fromRGB(255, 255, 100)
+        hl.FillTransparency = 0.5
+        hl.OutlineColor = Color3.fromRGB(255, 220, 50)
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        
+        if obj:IsA("Model") then
+            hl.Parent = obj
+        else
+            hl.Adornee = part
+            hl.Parent = part
+        end
+        table.insert(Addon.EggESPObjects, hl)
+        
+        -- Billboard
+        local bb = Instance.new("BillboardGui")
+        bb.Name = "EGG_ESP_BB"
+        bb.Size = UDim2.new(0, 120, 0, 35)
+        bb.StudsOffset = Vector3.new(0, 3, 0)
+        bb.AlwaysOnTop = true
+        bb.Adornee = part
+        bb.Parent = part
+        table.insert(Addon.EggESPObjects, bb)
+        
+        -- Фон
+        local bg = Instance.new("Frame")
+        bg.Size = UDim2.new(0.9, 0, 0, 22)
+        bg.Position = UDim2.new(0.05, 0, 0, 0)
+        bg.BackgroundColor3 = Color3.fromRGB(60, 50, 15)
+        bg.BackgroundTransparency = 0.25
+        bg.BorderSizePixel = 0
+        bg.Parent = bb
+        Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 5)
+        
+        local bgStroke = Instance.new("UIStroke")
+        bgStroke.Color = Color3.fromRGB(255, 220, 50)
+        bgStroke.Thickness = 1
+        bgStroke.Transparency = 0.3
+        bgStroke.Parent = bg
+        
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(1, 0, 1, 0)
+        lbl.BackgroundTransparency = 1
+        lbl.Text = "🥚 EGG"
+        lbl.TextColor3 = Color3.fromRGB(255, 230, 80)
+        lbl.TextSize = 12
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextStrokeTransparency = 0.3
+        lbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+        lbl.Parent = bg
+        
+        -- Расстояние
+        local distLbl = Instance.new("TextLabel")
+        distLbl.Size = UDim2.new(1, 0, 0, 12)
+        distLbl.Position = UDim2.new(0, 0, 0, 22)
+        distLbl.BackgroundTransparency = 1
+        distLbl.Text = "0m"
+        distLbl.TextColor3 = C.TextLight
+        distLbl.TextSize = 9
+        distLbl.Font = Enum.Font.Gotham
+        distLbl.TextStrokeTransparency = 0.3
+        distLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+        distLbl.Parent = bb
+        
+        -- Обновление расстояния
+        spawn(function()
+            while Addon.EggESPEnabled and part and part.Parent and bb and bb.Parent do
+                local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if localHRP then
+                    local dist = math.floor((part.Position - localHRP.Position).Magnitude)
+                    distLbl.Text = dist .. "m"
+                end
+                task.wait(0.3)
+            end
+        end)
+    end
+    
+    -- Поиск всех объектов с "egg"
+    local function searchEggs(parent)
+        for _, obj in ipairs(parent:GetChildren()) do
+            if obj.Name:lower():find("egg") then
+                addEggHighlight(obj)
+            end
+            if #obj:GetChildren() > 0 then
+                searchEggs(obj)
+            end
+        end
+    end
+    
+    searchEggs(workspace)
+    
+    -- Периодическое обновление
+    spawn(function()
+        while Addon.EggESPEnabled and State.ScriptActive do
+            task.wait(5)
+            if Addon.EggESPEnabled then
+                clearEggESP()
+                searchEggs(workspace)
+            end
+        end
+    end)
+    
+    updateStatus("🥚 Egg ESP ENABLED", Color3.fromRGB(255, 220, 50))
+end
+
+local function disableEggESP()
+    Addon.EggESPEnabled = false
+    clearEggESP()
+    updateStatus("🥚 Egg ESP DISABLED", C.TextMuted)
+end
+
+-- =============================================
+-- === ADDON: ШЕЙДЕРЫ ===
+-- =============================================
+
+local shaderObjects = {}
+
+local function enableShaders()
+    Addon.ShaderEnabled = true
+    
+    -- Color Correction
+    local cc = Instance.new("ColorCorrectionEffect")
+    cc.Name = "WallaceShader_CC"
+    cc.Brightness = 0.05
+    cc.Contrast = 0.15
+    cc.Saturation = 0.2
+    cc.TintColor = Color3.fromRGB(255, 248, 235)
+    cc.Parent = Lighting
+    table.insert(shaderObjects, cc)
+    
+    -- Bloom
+    local bloom = Instance.new("BloomEffect")
+    bloom.Name = "WallaceShader_Bloom"
+    bloom.Intensity = 0.4
+    bloom.Size = 30
+    bloom.Threshold = 1.1
+    bloom.Parent = Lighting
+    table.insert(shaderObjects, bloom)
+    
+    -- Sunrays
+    local sunrays = Instance.new("SunRaysEffect")
+    sunrays.Name = "WallaceShader_Sunrays"
+    sunrays.Intensity = 0.12
+    sunrays.Spread = 0.8
+    sunrays.Parent = Lighting
+    table.insert(shaderObjects, sunrays)
+    
+    -- Blur (минимальный для глубины)
+    local blur = Instance.new("DepthOfFieldEffect")
+    blur.Name = "WallaceShader_DOF"
+    blur.FarIntensity = 0.08
+    blur.FocusDistance = 50
+    blur.InFocusRadius = 30
+    blur.NearIntensity = 0
+    blur.Parent = Lighting
+    table.insert(shaderObjects, blur)
+    
+    -- Второй Color Correction для виньетки
+    local cc2 = Instance.new("ColorCorrectionEffect")
+    cc2.Name = "WallaceShader_Vignette"
+    cc2.Brightness = -0.02
+    cc2.Contrast = 0.08
+    cc2.Saturation = 0.1
+    cc2.Parent = Lighting
+    table.insert(shaderObjects, cc2)
+    
+    updateStatus("✨ Shaders ENABLED — cinematic mode", C.Purple)
+end
+
+local function disableShaders()
+    Addon.ShaderEnabled = false
+    for _, obj in ipairs(shaderObjects) do
+        if obj and obj.Parent then
+            obj:Destroy()
+        end
+    end
+    shaderObjects = {}
+    updateStatus("✨ Shaders DISABLED", C.TextMuted)
+end
+
+-- =============================================
+-- === ADDON: FARM CHEESE С КУЛДАУНОМ ===
+-- =============================================
+
+-- Патчим кнопку Farm Cheese с кулдауном
+local _origTeleportTo = teleportTo
+
+local function teleportWithCooldown(pos, btnRef)
+    if Addon.FarmCheeseCoolingDown then
+        updateStatus("⏳ Cooldown! Wait...", C.Orange)
+        return false
+    end
+    
+    Addon.FarmCheeseCoolingDown = true
+    
+    local result = _origTeleportTo(pos)
+    
+    -- Визуальный кулдаун
+    spawn(function()
+        task.wait(Addon.FarmCheeseCooldown)
+        Addon.FarmCheeseCoolingDown = false
+    end)
+    
+    return result
+end
+
+-- =============================================
+-- === ADDON: ДОБАВЛЕНИЕ НОВЫХ КНОПОК В ВКЛАДКИ ===
+-- =============================================
+
+-- ===== Добавления в TAB: MAIN =====
+local mainTab = tabFrames["Main"]
+
+createSectionHeader(mainTab, "Combat", "⚔️", 20)
+
+local aimbotCard = createCard(mainTab, 21)
+addCardContent(aimbotCard, "🎯", "Aimbot", "Auto-aim at nearest player/Wallace")
+addToggle(aimbotCard, function(on)
+    if on then enableAimbot() else disableAimbot() end
+end)
+
+createSectionHeader(mainTab, "World ESP", "🌍", 30)
+
+local eggEspCard = createCard(mainTab, 31)
+addCardContent(eggEspCard, "🥚", "Egg ESP", "Highlight all eggs on the map")
+addToggle(eggEspCard, function(on)
+    if on then enableEggESP() else disableEggESP() end
+end)
+
+-- ===== Добавления в TAB: TELEPORT =====
+local tpTab = tabFrames["Teleport"]
+
+createSectionHeader(tpTab, "Wallace Locations", "💀", 60)
+
+local wallaceSpawnCard = createCard(tpTab, 61)
+addCardContent(wallaceSpawnCard, "💀", "Wallace Spawn", "TP to Wallace spawn point")
+addButton(wallaceSpawnCard, "TP", C.Red, function()
+    if teleportWithCooldown(WALLACE_SPAWN_POS) then
+        updateStatus("💀 TP to Wallace Spawn!", C.Red)
+    end
+end)
+
+-- Обновлённая кнопка Farm Cheese с кулдауном
+-- (Найдём существующую карточку и модифицируем описание)
+
+-- ===== Добавления в TAB: VISUAL =====
+local visualTab = tabFrames["Visual"]
+
+createSectionHeader(visualTab, "Post Processing", "🎬", 20)
+
+local shaderCard = createCard(visualTab, 21)
+addCardContent(shaderCard, "✨", "Cinematic Shaders", "Bloom, Sunrays, DOF, Color Grade")
+addToggle(shaderCard, function(on)
+    if on then enableShaders() else disableShaders() end
+end)
+
+-- Пресеты шейдеров
+local shaderPresets = {
+    {Name = "Warm Cheese", Icon = "🧀", Brightness = 0.08, Contrast = 0.2, Saturation = 0.3, Tint = Color3.fromRGB(255, 240, 200)},
+    {Name = "Horror Wallace", Icon = "💀", Brightness = -0.05, Contrast = 0.3, Saturation = -0.3, Tint = Color3.fromRGB(200, 210, 230)},
+    {Name = "Neon Glow", Icon = "💜", Brightness = 0.1, Contrast = 0.25, Saturation = 0.5, Tint = Color3.fromRGB(240, 230, 255)},
+}
+
+for idx, preset in ipairs(shaderPresets) do
+    local pCard = createCard(visualTab, 21 + idx)
+    pCard.Size = UDim2.new(1, 0, 0, 48)
+    addCardContent(pCard, preset.Icon, preset.Name, "Shader preset")
+    
+    local pBtn = Instance.new("TextButton")
+    pBtn.Size = UDim2.new(0, 50, 0, 24)
+    pBtn.Position = UDim2.new(1, -60, 0.5, -12)
+    pBtn.BackgroundColor3 = C.Purple
+    pBtn.Text = "SET"
+    pBtn.TextColor3 = C.TextWhite
+    pBtn.TextSize = 10
+    pBtn.Font = Enum.Font.GothamBold
+    pBtn.BorderSizePixel = 0
+    pBtn.ZIndex = 4
+    pBtn.ClipsDescendants = true
+    pBtn.Parent = pCard
+    Instance.new("UICorner", pBtn).CornerRadius = UDim.new(0, 6)
+    
+    pBtn.MouseButton1Click:Connect(function()
+        -- Удаляем старые шейдеры
+        for _, obj in ipairs(Lighting:GetChildren()) do
+            if obj.Name:find("WallacePreset") then obj:Destroy() end
+        end
+        
+        local cc = Instance.new("ColorCorrectionEffect")
+        cc.Name = "WallacePreset_CC"
+        cc.Brightness = preset.Brightness
+        cc.Contrast = preset.Contrast
+        cc.Saturation = preset.Saturation
+        cc.TintColor = preset.Tint
+        cc.Parent = Lighting
+        
+        rippleEffect(pBtn, 25, 12)
+        updateStatus("🎨 Shader: " .. preset.Name, C.Purple)
+    end)
+end
+
+-- =============================================
+-- === ADDON: ПРИВЕТСТВИЕ ИГРОКА ===
+-- =============================================
+
+local function createGreeting()
+    if Addon.GreetingShown then return end
+    Addon.GreetingShown = true
+    
+    local greetFrame = Instance.new("Frame")
+    greetFrame.Name = "GreetingFrame"
+    greetFrame.Size = UDim2.new(0, 320, 0, 80)
+    greetFrame.Position = UDim2.new(0, -330, 1, -95)
+    greetFrame.BackgroundColor3 = C.BgDark
+    greetFrame.BackgroundTransparency = 0.05
+    greetFrame.BorderSizePixel = 0
+    greetFrame.ZIndex = 20
+    greetFrame.Parent = ScreenGui
+    Instance.new("UICorner", greetFrame).CornerRadius = UDim.new(0, 12)
+    
+    local greetStroke = Instance.new("UIStroke")
+    greetStroke.Color = C.Gold
+    greetStroke.Thickness = 2
+    greetStroke.Transparency = 0.2
+    greetStroke.Parent = greetFrame
+    
+    local greetGradient = Instance.new("UIGradient")
+    greetGradient.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(35, 28, 18)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(25, 18, 12)),
+    }
+    greetGradient.Rotation = 135
+    greetGradient.Parent = greetFrame
+    
+    -- Тень
+    local greetShadow = Instance.new("ImageLabel")
+    greetShadow.Size = UDim2.new(1, 20, 1, 20)
+    greetShadow.Position = UDim2.new(0, -10, 0, -10)
+    greetShadow.BackgroundTransparency = 1
+    greetShadow.Image = "rbxassetid://6015897843"
+    greetShadow.ImageColor3 = Color3.new(0, 0, 0)
+    greetShadow.ImageTransparency = 0.4
+    greetShadow.ScaleType = Enum.ScaleType.Slice
+    greetShadow.SliceCenter = Rect.new(49, 49, 450, 450)
+    greetShadow.ZIndex = 19
+    greetShadow.Parent = greetFrame
+    
+    -- Золотая линия сверху
+    local greetLine = Instance.new("Frame")
+    greetLine.Size = UDim2.new(1, 0, 0, 2)
+    greetLine.BackgroundColor3 = C.Gold
+    greetLine.BorderSizePixel = 0
+    greetLine.ZIndex = 21
+    greetLine.Parent = greetFrame
+    Instance.new("UICorner", greetLine).CornerRadius = UDim.new(0, 12)
+    
+    local lineGrad = Instance.new("UIGradient")
+    lineGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, C.GoldDark),
+        ColorSequenceKeypoint.new(0.5, C.GoldGlow),
+        ColorSequenceKeypoint.new(1, C.GoldDark),
+    }
+    lineGrad.Parent = greetLine
+    
+    -- Аватар игрока
+    local avatarFrame = Instance.new("Frame")
+    avatarFrame.Size = UDim2.new(0, 52, 0, 52)
+    avatarFrame.Position = UDim2.new(0, 14, 0.5, -26)
+    avatarFrame.BackgroundColor3 = C.Gold
+    avatarFrame.BackgroundTransparency = 0.7
+    avatarFrame.BorderSizePixel = 0
+    avatarFrame.ZIndex = 21
+    avatarFrame.Parent = greetFrame
+    Instance.new("UICorner", avatarFrame).CornerRadius = UDim.new(1, 0)
+    
+    local avatarStroke = Instance.new("UIStroke")
+    avatarStroke.Color = C.Gold
+    avatarStroke.Thickness = 2
+    avatarStroke.Transparency = 0.3
+    avatarStroke.Parent = avatarFrame
+    
+    -- Фото игрока
+    local avatarImg = Instance.new("ImageLabel")
+    avatarImg.Size = UDim2.new(1, -4, 1, -4)
+    avatarImg.Position = UDim2.new(0, 2, 0, 2)
+    avatarImg.BackgroundTransparency = 1
+    avatarImg.Image = Players:GetUserThumbnailAsync(
+        LocalPlayer.UserId,
+        Enum.ThumbnailType.HeadShot,
+        Enum.ThumbnailSize.Size100x100
+    )
+    avatarImg.ZIndex = 22
+    avatarImg.Parent = avatarFrame
+    Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
+    
+    -- Текст приветствия
+    local greetTitle = Instance.new("TextLabel")
+    greetTitle.Size = UDim2.new(1, -85, 0, 20)
+    greetTitle.Position = UDim2.new(0, 76, 0, 14)
+    greetTitle.BackgroundTransparency = 1
+    greetTitle.Text = "Welcome back! 🧀"
+    greetTitle.TextColor3 = C.GoldLight
+    greetTitle.TextSize = 14
+    greetTitle.Font = Enum.Font.GothamBold
+    greetTitle.TextXAlignment = Enum.TextXAlignment.Left
+    greetTitle.ZIndex = 21
+    greetTitle.Parent = greetFrame
+    
+    local greetName = Instance.new("TextLabel")
+    greetName.Size = UDim2.new(1, -85, 0, 18)
+    greetName.Position = UDim2.new(0, 76, 0, 36)
+    greetName.BackgroundTransparency = 1
+    greetName.Text = "⚡ " .. LocalPlayer.DisplayName .. " (@" .. LocalPlayer.Name .. ")"
+    greetName.TextColor3 = C.TextLight
+    greetName.TextSize = 11
+    greetName.Font = Enum.Font.Gotham
+    greetName.TextXAlignment = Enum.TextXAlignment.Left
+    greetName.TextTruncate = Enum.TextTruncate.AtEnd
+    greetName.ZIndex = 21
+    greetName.Parent = greetFrame
+    
+    local greetSub = Instance.new("TextLabel")
+    greetSub.Size = UDim2.new(1, -85, 0, 14)
+    greetSub.Position = UDim2.new(0, 76, 0, 54)
+    greetSub.BackgroundTransparency = 1
+    greetSub.Text = "You vs Wallace • Ultimate v2.1"
+    greetSub.TextColor3 = C.TextDark
+    greetSub.TextSize = 9
+    greetSub.Font = Enum.Font.Gotham
+    greetSub.TextXAlignment = Enum.TextXAlignment.Left
+    greetSub.ZIndex = 21
+    greetSub.Parent = greetFrame
+    
+    -- Анимация входа
+    task.wait(0.3)
+    tweenProperty(greetFrame, {Position = UDim2.new(0, 15, 1, -95)}, 0.7, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+    
+    -- Пульсация обводки аватара
+    spawn(function()
+        for i = 1, 3 do
+            tweenProperty(avatarStroke, {Transparency = 0, Color = C.GoldGlow}, 0.5, Enum.EasingStyle.Sine)
+            task.wait(0.5)
+            tweenProperty(avatarStroke, {Transparency = 0.5, Color = C.Gold}, 0.5, Enum.EasingStyle.Sine)
+            task.wait(0.5)
+        end
+    end)
+    
+    -- Автоматическое скрытие через 6 секунд
+    task.wait(6)
+    tweenProperty(greetFrame, {Position = UDim2.new(0, -330, 1, -95)}, 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    task.wait(0.7)
+    greetFrame:Destroy()
+end
+
+spawn(createGreeting)
+
+-- =============================================
+-- === ADDON: КЛАВИША K — ЗАКРЫТИЕ С ЗВУКОМ ===
+-- =============================================
+
+local function playPageFlipSound()
+    local sound = Instance.new("Sound")
+    sound.Name = "PageFlipSound"
+    sound.SoundId = "rbxassetid://9120386948"
+    sound.Volume = 0.6
+    sound.PlaybackSpeed = 1.2
+    sound.Parent = game:GetService("SoundService")
+    sound:Play()
+    
+    task.delay(2, function()
+        sound:Destroy()
+    end)
+end
+
+-- Второй вариант звука если первый не работает
+local function playUISound()
+    local sound = Instance.new("Sound")
+    sound.Name = "UIClickSound"
+    sound.SoundId = "rbxassetid://6042053626"
+    sound.Volume = 0.5
+    sound.PlaybackSpeed = 1
+    sound.Parent = game:GetService("SoundService")
+    sound:Play()
+    
+    task.delay(2, function()
+        sound:Destroy()
+    end)
+end
+
+-- Клавиша K — плавное закрытие/открытие с звуком
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    
+    if input.KeyCode == Enum.KeyCode.K then
+        -- Звук перелистывания
+        pcall(playPageFlipSound)
+        pcall(playUISound)
+        
+        if MainFrame.Visible then
+            -- Плавное закрытие
+            tweenProperty(MainFrame, {
+                Size = UDim2.new(0, 420, 0, 580),
+                BackgroundTransparency = 0.3,
+                Position = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset, 
+                                     MainFrame.Position.Y.Scale, MainFrame.Position.Y.Offset + 30)
+            }, 0.35, Enum.EasingStyle.Quart)
+            
+            task.wait(0.1)
+            
+            tweenProperty(MainFrame, {
+                Size = UDim2.new(0, 380, 0, 0),
+                BackgroundTransparency = 1
+            }, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+            
+            task.wait(0.35)
+            MainFrame.Visible = false
+            -- Восстанавливаем размер для следующего открытия
+            MainFrame.Size = UDim2.new(0, 420, 0, 580)
+            MainFrame.BackgroundTransparency = 0
+        else
+            -- Плавное открытие
+            MainFrame.Visible = true
+            MainFrame.Size = UDim2.new(0, 380, 0, 0)
+            MainFrame.BackgroundTransparency = 1
+            
+            tweenProperty(MainFrame, {
+                Size = UDim2.new(0, 420, 0, 580),
+                BackgroundTransparency = 0
+            }, 0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+        end
+    end
+end)
+
+-- =============================================
+-- === ADDON: ЗВУК ПРИ ПЕРЕКЛЮЧЕНИИ ВКЛАДОК ===
+-- =============================================
+
+local _origSwitchTab = switchTab
+
+switchTab = function(tabName)
+    -- Звук при переключении
+    pcall(function()
+        local tabSound = Instance.new("Sound")
+        tabSound.SoundId = "rbxassetid://9125402735"
+        tabSound.Volume = 0.3
+        tabSound.PlaybackSpeed = 1.5
+        tabSound.Parent = game:GetService("SoundService")
+        tabSound:Play()
+        task.delay(1, function() tabSound:Destroy() end)
+    end)
+    
+    -- Анимация смены вкладки
+    local currentFrame = tabFrames[State.CurrentTab]
+    local newFrame = tabFrames[tabName]
+    
+    if currentFrame and currentFrame ~= newFrame then
+        -- Fade out текущей
+        for _, child in ipairs(currentFrame:GetChildren()) do
+            if child:IsA("Frame") then
+                tweenProperty(child, {BackgroundTransparency = 1}, 0.15)
+            end
+        end
+    end
+    
+    -- Вызов оригинала
+    _origSwitchTab(tabName)
+    
+    -- Fade in новой
+    if newFrame then
+        for _, child in ipairs(newFrame:GetChildren()) do
+            if child:IsA("Frame") and child.BackgroundTransparency < 1 then
+                local origTransparency = child.BackgroundTransparency
+                child.BackgroundTransparency = 1
+                tweenProperty(child, {BackgroundTransparency = origTransparency}, 0.3)
+            end
+        end
+    end
+end
+
+-- =============================================
+-- === ADDON: УВЕДОМЛЕНИЯ ===
+-- =============================================
+
+local notificationQueue = {}
+local notificationShowing = false
+
+local function showNotification(title, message, icon, duration, color)
+    table.insert(notificationQueue, {
+        title = title,
+        message = message,
+        icon = icon or "ℹ️",
+        duration = duration or 3,
+        color = color or C.Gold
+    })
+    
+    if notificationShowing then return end
+    notificationShowing = true
+    
+    spawn(function()
+        while #notificationQueue > 0 do
+            local data = table.remove(notificationQueue, 1)
+            
+            local notif = Instance.new("Frame")
+            notif.Name = "Notification"
+            notif.Size = UDim2.new(0, 280, 0, 65)
+            notif.Position = UDim2.new(1, 290, 0, 15)
+            notif.BackgroundColor3 = C.BgDark
+            notif.BackgroundTransparency = 0.05
+            notif.BorderSizePixel = 0
+            notif.ZIndex = 30
+            notif.Parent = ScreenGui
+            Instance.new("UICorner", notif).CornerRadius = UDim.new(0, 10)
+            
+            local nStroke = Instance.new("UIStroke")
+            nStroke.Color = data.color
+            nStroke.Thickness = 1.5
+            nStroke.Transparency = 0.2
+            nStroke.Parent = notif
+            
+            -- Линия акцента слева
+            local accentLine = Instance.new("Frame")
+            accentLine.Size = UDim2.new(0, 4, 0.7, 0)
+            accentLine.Position = UDim2.new(0, 6, 0.15, 0)
+            accentLine.BackgroundColor3 = data.color
+            accentLine.BorderSizePixel = 0
+            accentLine.ZIndex = 31
+            accentLine.Parent = notif
+            Instance.new("UICorner", accentLine).CornerRadius = UDim.new(0, 2)
+            
+            -- Иконка
+            local nIcon = Instance.new("TextLabel")
+            nIcon.Size = UDim2.new(0, 30, 0, 30)
+            nIcon.Position = UDim2.new(0, 16, 0.5, -15)
+            nIcon.BackgroundTransparency = 1
+            nIcon.Text = data.icon
+            nIcon.TextSize = 20
+            nIcon.Font = Enum.Font.SourceSans
+            nIcon.ZIndex = 31
+            nIcon.Parent = notif
+            
+            -- Заголовок
+            local nTitle = Instance.new("TextLabel")
+            nTitle.Size = UDim2.new(1, -60, 0, 18)
+            nTitle.Position = UDim2.new(0, 50, 0, 10)
+            nTitle.BackgroundTransparency = 1
+            nTitle.Text = data.title
+            nTitle.TextColor3 = data.color
+            nTitle.TextSize = 13
+            nTitle.Font = Enum.Font.GothamBold
+            nTitle.TextXAlignment = Enum.TextXAlignment.Left
+            nTitle.ZIndex = 31
+            nTitle.Parent = notif
+            
+            -- Сообщение
+            local nMsg = Instance.new("TextLabel")
+            nMsg.Size = UDim2.new(1, -60, 0, 14)
+            nMsg.Position = UDim2.new(0, 50, 0, 30)
+            nMsg.BackgroundTransparency = 1
+            nMsg.Text = data.message
+            nMsg.TextColor3 = C.TextMuted
+            nMsg.TextSize = 10
+            nMsg.Font = Enum.Font.Gotham
+            nMsg.TextXAlignment = Enum.TextXAlignment.Left
+            nMsg.TextTruncate = Enum.TextTruncate.AtEnd
+            nMsg.ZIndex = 31
+            nMsg.Parent = notif
+            
+            -- Прогресс бар
+            local progressBg = Instance.new("Frame")
+            progressBg.Size = UDim2.new(0.85, 0, 0, 3)
+            progressBg.Position = UDim2.new(0.075, 0, 1, -8)
+            progressBg.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+            progressBg.BorderSizePixel = 0
+            progressBg.ZIndex = 31
+            progressBg.Parent = notif
+            Instance.new("UICorner", progressBg).CornerRadius = UDim.new(1, 0)
+            
+            local progressFill = Instance.new("Frame")
+            progressFill.Size = UDim2.new(1, 0, 1, 0)
+            progressFill.BackgroundColor3 = data.color
+            progressFill.BorderSizePixel = 0
+            progressFill.ZIndex = 32
+            progressFill.Parent = progressBg
+            Instance.new("UICorner", progressFill).CornerRadius = UDim.new(1, 0)
+            
+            -- Анимация входа
+            tweenProperty(notif, {Position = UDim2.new(1, -295, 0, 15)}, 0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+            
+            -- Таймер (прогресс бар)
+            tweenProperty(progressFill, {Size = UDim2.new(0, 0, 1, 0)}, data.duration, Enum.EasingStyle.Linear)
+            
+            task.wait(data.duration)
+            
+            -- Анимация выхода
+            tweenProperty(notif, {Position = UDim2.new(1, 290, 0, 15)}, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+            task.wait(0.4)
+            notif:Destroy()
+        end
+        
+        notificationShowing = false
+    end)
+end
+
+-- =============================================
+-- === ADDON: УВЕДОМЛЕНИЯ ПРИ ВХОДЕ/ВЫХОДЕ ===
+-- =============================================
+
+Players.PlayerAdded:Connect(function(player)
+    local isWallace = player.Name:lower():find("wallace") or player.DisplayName:lower():find("wallace")
+    
+    if isWallace then
+        showNotification("⚠️ WARNING!", player.Name .. " (WALLACE) joined!", "💀", 5, C.Red)
+    else
+        showNotification("Player Joined", player.Name .. " joined the game", "👋", 3, C.Green)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    showNotification("Player Left", player.Name .. " left the game", "👋", 3, C.Orange)
+end)
+
+-- =============================================
+-- === ADDON: ИНФОРМАЦИЯ О ГОРЯЧИХ КЛАВИШАХ ===
+-- =============================================
+
+-- Добавляем в Info Tab
+local infoTab = tabFrames["Info"]
+
+createSectionHeader(infoTab, "Hotkeys", "⌨️", 20)
+
+local hotkeyCard = Instance.new("Frame")
+hotkeyCard.Size = UDim2.new(1, 0, 0, 100)
+hotkeyCard.BackgroundColor3 = C.BgCard
+hotkeyCard.BorderSizePixel = 0
+hotkeyCard.LayoutOrder = 21
+hotkeyCard.Parent = infoTab
+Instance.new("UICorner", hotkeyCard).CornerRadius = UDim.new(0, 10)
+
+local hkStroke = Instance.new("UIStroke")
+hkStroke.Color = C.Border
+hkStroke.Thickness = 1
+hkStroke.Transparency = 0.6
+hkStroke.Parent = hotkeyCard
+
+local hotkeys = {
+    {Key = "F9", Action = "Toggle GUI (instant)"},
+    {Key = "K", Action = "Toggle GUI (animated + sound)"},
+    {Key = "🖱️ Drag", Action = "Move window (drag header)"},
+    {Key = "—", Action = "Minimize window"},
+    {Key = "✕", Action = "Close & cleanup script"},
+}
+
+for i, hk in ipairs(hotkeys) do
+    local y = 4 + (i - 1) * 19
+    
+    -- Кнопка клавиши
+    local keyBadge = Instance.new("Frame")
+    keyBadge.Size = UDim2.new(0, 36, 0, 16)
+    keyBadge.Position = UDim2.new(0, 8, 0, y)
+    keyBadge.BackgroundColor3 = C.Gold
+    keyBadge.BackgroundTransparency = 0.75
+    keyBadge.BorderSizePixel = 0
+    keyBadge.ZIndex = 3
+    keyBadge.Parent = hotkeyCard
+    Instance.new("UICorner", keyBadge).CornerRadius = UDim.new(0, 4)
+    
+    local keyText = Instance.new("TextLabel")
+    keyText.Size = UDim2.new(1, 0, 1, 0)
+    keyText.BackgroundTransparency = 1
+    keyText.Text = hk.Key
+    keyText.TextColor3 = C.GoldLight
+    keyText.TextSize = 9
+    keyText.Font = Enum.Font.GothamBold
+    keyText.ZIndex = 4
+    keyText.Parent = keyBadge
+    
+    local actionLbl = Instance.new("TextLabel")
+    actionLbl.Size = UDim2.new(1, -55, 0, 16)
+    actionLbl.Position = UDim2.new(0, 50, 0, y)
+    actionLbl.BackgroundTransparency = 1
+    actionLbl.Text = hk.Action
+    actionLbl.TextColor3 = C.TextLight
+    actionLbl.TextSize = 10
+    actionLbl.Font = Enum.Font.Gotham
+    actionLbl.TextXAlignment = Enum.TextXAlignment.Left
+    actionLbl.ZIndex = 3
+    actionLbl.Parent = hotkeyCard
+end
+
+-- =============================================
+-- === ADDON: ДЕКОРАТИВНЫЕ ЧАСТИЦЫ В УГЛУ ===
+-- =============================================
+
+local function createFloatingParticles()
+    spawn(function()
+        while State.ScriptActive do
+            if MainFrame.Visible and not State.Minimized then
+                local particle = Instance.new("Frame")
+                particle.Size = UDim2.new(0, math.random(3, 6), 0, math.random(3, 6))
+                particle.Position = UDim2.new(
+                    math.random() * 0.3, 0,
+                    1, 10
+                )
+                particle.BackgroundColor3 = C.Gold
+                particle.BackgroundTransparency = math.random(60, 85) / 100
+                particle.BorderSizePixel = 0
+                particle.ZIndex = 1
+                particle.Parent = MainFrame
+                Instance.new("UICorner", particle).CornerRadius = UDim.new(1, 0)
+                
+                local targetX = particle.Position.X.Scale + (math.random() - 0.5) * 0.2
+                
+                tweenProperty(particle, {
+                    Position = UDim2.new(targetX, 0, -0.05, 0),
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(0, 1, 0, 1)
+                }, math.random(30, 60) / 10, Enum.EasingStyle.Linear)
+                
+                task.delay(7, function()
+                    if particle and particle.Parent then
+                        particle:Destroy()
+                    end
+                end)
+            end
+            
+            task.wait(math.random(8, 15) / 10)
+        end
+    end)
+end
+
+createFloatingParticles()
+
+-- =============================================
+-- === ADDON: АНИМАЦИЯ ВОДЯНОГО ЗНАКА ===
+-- =============================================
+
+local watermark = Instance.new("TextLabel")
+watermark.Name = "Watermark"
+watermark.Size = UDim2.new(0, 240, 0, 22)
+watermark.Position = UDim2.new(1, -245, 0, 5)
+watermark.BackgroundColor3 = C.BgDark
+watermark.BackgroundTransparency = 0.3
+watermark.Text = "  🧀 You vs Wallace v2.1 | " .. os.date("%H:%M")
+watermark.TextColor3 = C.TextMuted
+watermark.TextSize = 10
+watermark.Font = Enum.Font.Gotham
+watermark.TextXAlignment = Enum.TextXAlignment.Left
+watermark.BorderSizePixel = 0
+watermark.ZIndex = 15
+watermark.Parent = ScreenGui
+Instance.new("UICorner", watermark).CornerRadius = UDim.new(0, 6)
+
+local wmStroke = Instance.new("UIStroke")
+wmStroke.Color = C.Gold
+wmStroke.Thickness = 1
+wmStroke.Transparency = 0.7
+wmStroke.Parent = watermark
+
+-- Обновление времени
+spawn(function()
+    while State.ScriptActive do
+        local fps = math.floor(1 / RunService.RenderStepped:Wait())
+        watermark.Text = "  🧀 You vs Wallace v2.1 | " .. os.date("%H:%M:%S") .. " | " .. fps .. " FPS"
+    end
+end)
+
+-- =============================================
+-- === ADDON: СТАРТОВЫЕ УВЕДОМЛЕНИЯ ===
+-- =============================================
+
+task.wait(1)
+showNotification("Script Loaded!", "You vs Wallace Ultimate v2.1", "🧀", 4, C.Gold)
+
+task.wait(0.3)
+showNotification("New Features!", "Aimbot, Egg ESP, Shaders, K key", "✨", 4, C.Purple)
+
+task.wait(0.3)
+showNotification("Wallace Detection", "Wallace players glow RED in ESP", "💀", 4, C.Red)
+
+-- =============================================
+-- === ADDON: ГОТОВО ===
+-- =============================================
+
+print("═══════════════════════════════════════")
+print("  🧀 ADDON PACK v2.1 LOADED!")
+print("  ✅ Wallace Red ESP")
+print("  ✅ Aimbot")
+print("  ✅ Egg ESP")
+print("  ✅ Shaders & Presets")
+print("  ✅ Player Greeting")
+print("  ✅ K key toggle")
+print("  ✅ Notifications")
+print("  ✅ Floating Particles")
+print("  ✅ Watermark")
+print("═══════════════════════════════════════")
+
+--[[
+    ╔════════════════════════════════════════════════╗
+    ║   YOU vs WALLACE — ADDON PATCH v2.2            ║
+    ║                                                ║
+    ║   FIXES & NEW FEATURES:                        ║
+    ║   • Egg ESP через Workspace с именами          ║
+    ║   • Wallace ESP только игроки (HP 1000)        ║
+    ║   • Aimbot с кругом + ПКМ                      ║
+    ║   • 5 новых шейдеров                           ║
+    ║   • Лист обновлений                            ║
+    ║   • Приветствие справа по центру               ║
+    ║   • Ультра-детализация GUI                     ║
+    ║                                                ║
+    ║   ➜ Вставить ПОСЛЕ Addon v2.1                 ║
+    ╚════════════════════════════════════════════════╝
+]]
+
+-- =============================================
+-- === PATCH v2.2: СОСТОЯНИЯ ===
+-- =============================================
+
+local Patch22 = {
+    AimbotV2Enabled = false,
+    AimbotCircleVisible = false,
+    AimbotLockedTarget = nil,
+    AimbotFOVRadius = 120,
+    EggESPV2Enabled = false,
+    EggESPV2Objects = {},
+    WallaceDetectedPlayers = {},
+    ChangelogOpen = false,
+}
+
+-- =============================================
+-- === PATCH: УЛЬТРА-ДЕТАЛИЗАЦИЯ GUI ===
+-- =============================================
+
+-- Микро-паттерн на фоне MainFrame
+local function addMicroPattern()
+    for i = 1, 8 do
+        local line = Instance.new("Frame")
+        line.Name = "MicroLine_" .. i
+        line.Size = UDim2.new(1, 0, 0, 1)
+        line.Position = UDim2.new(0, 0, 0, 75 + i * 62)
+        line.BackgroundColor3 = C.Gold
+        line.BackgroundTransparency = 0.95
+        line.BorderSizePixel = 0
+        line.ZIndex = 1
+        line.Parent = MainFrame
+
+        local grad = Instance.new("UIGradient")
+        grad.Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.3, 0.9),
+            NumberSequenceKeypoint.new(0.5, 0.85),
+            NumberSequenceKeypoint.new(0.7, 0.9),
+            NumberSequenceKeypoint.new(1, 1),
+        }
+        grad.Parent = line
+    end
+end
+
+pcall(addMicroPattern)
+
+-- Угловые декорации на MainFrame
+local function addCornerDecorations()
+    local corners = {
+        {pos = UDim2.new(0, 8, 0, 78), rot = 0},
+        {pos = UDim2.new(1, -18, 0, 78), rot = 90},
+        {pos = UDim2.new(0, 8, 1, -38), rot = 270},
+        {pos = UDim2.new(1, -18, 1, -38), rot = 180},
+    }
+
+    for idx, corner in ipairs(corners) do
+        -- Горизонтальная линия
+        local hLine = Instance.new("Frame")
+        hLine.Name = "CornerH_" .. idx
+        hLine.Size = UDim2.new(0, 14, 0, 1)
+        hLine.Position = corner.pos
+        hLine.BackgroundColor3 = C.Gold
+        hLine.BackgroundTransparency = 0.5
+        hLine.BorderSizePixel = 0
+        hLine.ZIndex = 8
+        hLine.Parent = MainFrame
+
+        -- Вертикальная линия
+        local vLine = Instance.new("Frame")
+        vLine.Name = "CornerV_" .. idx
+        vLine.Size = UDim2.new(0, 1, 0, 14)
+        vLine.Position = corner.pos
+        vLine.BackgroundColor3 = C.Gold
+        vLine.BackgroundTransparency = 0.5
+        vLine.BorderSizePixel = 0
+        vLine.ZIndex = 8
+        vLine.Parent = MainFrame
+
+        -- Точка в углу
+        local dot = Instance.new("Frame")
+        dot.Name = "CornerDot_" .. idx
+        dot.Size = UDim2.new(0, 3, 0, 3)
+        dot.Position = UDim2.new(corner.pos.X.Scale, corner.pos.X.Offset - 1, corner.pos.Y.Scale, corner.pos.Y.Offset - 1)
+        dot.BackgroundColor3 = C.GoldGlow
+        dot.BackgroundTransparency = 0.3
+        dot.BorderSizePixel = 0
+        dot.ZIndex = 9
+        dot.Parent = MainFrame
+        Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+    end
+end
+
+pcall(addCornerDecorations)
+
+-- Внутреннее свечение по краям MainFrame
+local function addEdgeGlow()
+    local edges = {
+        {size = UDim2.new(1, 0, 0, 40), pos = UDim2.new(0, 0, 0, 75), rot = 0},
+        {size = UDim2.new(1, 0, 0, 40), pos = UDim2.new(0, 0, 1, -68), rot = 180},
+    }
+
+    for i, edge in ipairs(edges) do
+        local glow = Instance.new("Frame")
+        glow.Name = "EdgeGlow_" .. i
+        glow.Size = edge.size
+        glow.Position = edge.pos
+        glow.BackgroundColor3 = C.Gold
+        glow.BackgroundTransparency = 0.97
+        glow.BorderSizePixel = 0
+        glow.ZIndex = 1
+        glow.Parent = MainFrame
+
+        local grad = Instance.new("UIGradient")
+        grad.Rotation = edge.rot
+        grad.Transparency = NumberSequence.new{
+            NumberSequenceKeypoint.new(0, 0.85),
+            NumberSequenceKeypoint.new(1, 1),
+        }
+        grad.Parent = glow
+    end
+end
+
+pcall(addEdgeGlow)
+
+-- Детализированные разделители между карточками
+local function enhanceCards()
+    for _, tab in pairs(tabFrames) do
+        for _, child in ipairs(tab:GetChildren()) do
+            if child:IsA("Frame") and child.BackgroundTransparency < 0.5 then
+                -- Добавляем внутреннюю подсветку сверху
+                if not child:FindFirstChild("_topGlow22") then
+                    local topGlow = Instance.new("Frame")
+                    topGlow.Name = "_topGlow22"
+                    topGlow.Size = UDim2.new(1, -2, 0, 1)
+                    topGlow.Position = UDim2.new(0, 1, 0, 1)
+                    topGlow.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                    topGlow.BackgroundTransparency = 0.92
+                    topGlow.BorderSizePixel = 0
+                    topGlow.ZIndex = child.ZIndex + 1
+                    topGlow.Parent = child
+                end
+
+                -- Тонкая тень снизу
+                if not child:FindFirstChild("_bottomShadow22") then
+                    local bottomShadow = Instance.new("Frame")
+                    bottomShadow.Name = "_bottomShadow22"
+                    bottomShadow.Size = UDim2.new(1, -2, 0, 1)
+                    bottomShadow.Position = UDim2.new(0, 1, 1, -2)
+                    bottomShadow.BackgroundColor3 = Color3.new(0, 0, 0)
+                    bottomShadow.BackgroundTransparency = 0.85
+                    bottomShadow.BorderSizePixel = 0
+                    bottomShadow.ZIndex = child.ZIndex + 1
+                    bottomShadow.Parent = child
+                end
+            end
+        end
+    end
+end
+
+task.defer(enhanceCards)
+
+-- Улучшение вкладок — добавляем индикатор активной вкладки
+local tabIndicator = Instance.new("Frame")
+tabIndicator.Name = "TabIndicator"
+tabIndicator.Size = UDim2.new(1 / #tabDefs, -6, 0, 3)
+tabIndicator.Position = UDim2.new(0, 3, 1, -4)
+tabIndicator.BackgroundColor3 = C.GoldGlow
+tabIndicator.BorderSizePixel = 0
+tabIndicator.ZIndex = 6
+tabIndicator.Parent = TabBar
+Instance.new("UICorner", tabIndicator).CornerRadius = UDim.new(1, 0)
+
+-- Свечение индикатора
+local indicatorGlow = Instance.new("Frame")
+indicatorGlow.Size = UDim2.new(1, 6, 0, 6)
+indicatorGlow.Position = UDim2.new(0, -3, 0.5, -3)
+indicatorGlow.BackgroundColor3 = C.GoldGlow
+indicatorGlow.BackgroundTransparency = 0.7
+indicatorGlow.BorderSizePixel = 0
+indicatorGlow.ZIndex = 5
+indicatorGlow.Parent = tabIndicator
+Instance.new("UICorner", indicatorGlow).CornerRadius = UDim.new(1, 0)
+
+-- Патчим switchTab для анимации индикатора
+local _prevSwitchTab = switchTab
+
+switchTab = function(tabName)
+    _prevSwitchTab(tabName)
+
+    -- Двигаем индикатор
+    local tabIndex = 0
+    for i, def in ipairs(tabDefs) do
+        if def.Name == tabName then
+            tabIndex = i - 1
+            break
+        end
+    end
+
+    local tabWidth = 1 / #tabDefs
+    tweenProperty(tabIndicator, {
+        Position = UDim2.new(tabWidth * tabIndex, 3, 1, -4)
+    }, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+end
+
+-- Декоративные точки в Header
+for i = 1, 3 do
+    local dot = Instance.new("Frame")
+    dot.Size = UDim2.new(0, 4, 0, 4)
+    dot.Position = UDim2.new(0, 68 + (i - 1) * 10, 0, 60)
+    dot.BackgroundColor3 = C.Gold
+    dot.BackgroundTransparency = 0.4 + (i - 1) * 0.2
+    dot.BorderSizePixel = 0
+    dot.ZIndex = 3
+    dot.Parent = Header
+    Instance.new("UICorner", dot).CornerRadius = UDim.new(1, 0)
+end
+
+-- =============================================
+-- === PATCH: FIX EGG ESP (Workspace + имена) ===
+-- =============================================
+
+-- Отключаем старый Egg ESP если он был
+pcall(function()
+    Addon.EggESPEnabled = false
+    if Addon.EggESPObjects then
+        for _, obj in ipairs(Addon.EggESPObjects) do
+            if obj and obj.Parent then obj:Destroy() end
+        end
+    end
+end)
+
+local function clearEggESPV2()
+    for _, obj in ipairs(Patch22.EggESPV2Objects) do
+        pcall(function()
+            if obj and obj.Parent then obj:Destroy() end
+        end)
+    end
+    Patch22.EggESPV2Objects = {}
+end
+
+local function createEggESPV2Billboard(part, eggName)
+    -- Billboard
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "EGG_ESP_V2_BB"
+    bb.Size = UDim2.new(0, 180, 0, 55)
+    bb.StudsOffset = Vector3.new(0, 3.5, 0)
+    bb.AlwaysOnTop = true
+    bb.Adornee = part
+    bb.MaxDistance = 1500
+    bb.Parent = part
+    table.insert(Patch22.EggESPV2Objects, bb)
+
+    -- Контейнер
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = bb
+
+    -- Фон имени
+    local nameBg = Instance.new("Frame")
+    nameBg.Size = UDim2.new(0.92, 0, 0, 26)
+    nameBg.Position = UDim2.new(0.04, 0, 0, 0)
+    nameBg.BackgroundColor3 = Color3.fromRGB(50, 42, 10)
+    nameBg.BackgroundTransparency = 0.15
+    nameBg.BorderSizePixel = 0
+    nameBg.Parent = container
+    Instance.new("UICorner", nameBg).CornerRadius = UDim.new(0, 6)
+
+    local nameStroke = Instance.new("UIStroke")
+    nameStroke.Color = Color3.fromRGB(255, 220, 50)
+    nameStroke.Thickness = 1.5
+    nameStroke.Transparency = 0.15
+    nameStroke.Parent = nameBg
+
+    -- Иконка яйца
+    local eggIcon = Instance.new("TextLabel")
+    eggIcon.Size = UDim2.new(0, 22, 0, 22)
+    eggIcon.Position = UDim2.new(0, 4, 0.5, -11)
+    eggIcon.BackgroundTransparency = 1
+    eggIcon.Text = "🥚"
+    eggIcon.TextSize = 14
+    eggIcon.Font = Enum.Font.SourceSans
+    eggIcon.Parent = nameBg
+
+    -- Имя объекта
+    local nameLbl = Instance.new("TextLabel")
+    nameLbl.Size = UDim2.new(1, -30, 1, 0)
+    nameLbl.Position = UDim2.new(0, 26, 0, 0)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Text = eggName
+    nameLbl.TextColor3 = Color3.fromRGB(255, 235, 80)
+    nameLbl.TextSize = 11
+    nameLbl.Font = Enum.Font.GothamBold
+    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+    nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+    nameLbl.TextStrokeTransparency = 0.2
+    nameLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLbl.Parent = nameBg
+
+    -- Расстояние
+    local distBg = Instance.new("Frame")
+    distBg.Size = UDim2.new(0, 70, 0, 16)
+    distBg.Position = UDim2.new(0.5, -35, 0, 29)
+    distBg.BackgroundColor3 = Color3.fromRGB(30, 25, 8)
+    distBg.BackgroundTransparency = 0.2
+    distBg.BorderSizePixel = 0
+    distBg.Parent = container
+    Instance.new("UICorner", distBg).CornerRadius = UDim.new(0, 4)
+
+    local distLbl = Instance.new("TextLabel")
+    distLbl.Name = "DistLabel"
+    distLbl.Size = UDim2.new(1, 0, 1, 0)
+    distLbl.BackgroundTransparency = 1
+    distLbl.Text = "📏 0m"
+    distLbl.TextColor3 = Color3.fromRGB(200, 185, 120)
+    distLbl.TextSize = 9
+    distLbl.Font = Enum.Font.GothamBold
+    distLbl.TextStrokeTransparency = 0.3
+    distLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distLbl.Parent = distBg
+
+    -- Тип объекта
+    local typeLbl = Instance.new("TextLabel")
+    typeLbl.Size = UDim2.new(1, 0, 0, 10)
+    typeLbl.Position = UDim2.new(0, 0, 0, 46)
+    typeLbl.BackgroundTransparency = 1
+    typeLbl.Text = "📦 " .. part.ClassName
+    typeLbl.TextColor3 = Color3.fromRGB(150, 135, 90)
+    typeLbl.TextSize = 8
+    typeLbl.Font = Enum.Font.Gotham
+    typeLbl.TextStrokeTransparency = 0.4
+    typeLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    typeLbl.Parent = container
+
+    -- Highlight
+    local parentModel = part.Parent
+    local hlTarget = part
+
+    if parentModel and parentModel:IsA("Model") and parentModel.Name:lower():find("egg") then
+        hlTarget = parentModel
+    end
+
+    if not hlTarget:FindFirstChild("EGG_HL_V2") then
+        local hl = Instance.new("Highlight")
+        hl.Name = "EGG_HL_V2"
+        hl.FillColor = Color3.fromRGB(255, 230, 50)
+        hl.FillTransparency = 0.55
+        hl.OutlineColor = Color3.fromRGB(255, 210, 30)
+        hl.OutlineTransparency = 0.05
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = hlTarget
+        table.insert(Patch22.EggESPV2Objects, hl)
+    end
+
+    -- Обновление расстояния
+    spawn(function()
+        while Patch22.EggESPV2Enabled and part and part.Parent and bb and bb.Parent do
+            local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+            if localHRP then
+                local dist = math.floor((part.Position - localHRP.Position).Magnitude)
+                distLbl.Text = "📏 " .. dist .. "m"
+
+                if dist < 20 then
+                    distLbl.TextColor3 = Color3.fromRGB(100, 255, 100)
+                elseif dist < 60 then
+                    distLbl.TextColor3 = Color3.fromRGB(255, 235, 80)
+                else
+                    distLbl.TextColor3 = Color3.fromRGB(200, 185, 120)
+                end
+            end
+            task.wait(0.2)
+        end
+    end)
+end
+
+local function enableEggESPV2()
+    Patch22.EggESPV2Enabled = true
+    clearEggESPV2()
+
+    local eggCount = 0
+
+    local function scanWorkspaceForEggs(parent, depth)
+        if depth > 15 then return end
+
+        for _, obj in ipairs(parent:GetChildren()) do
+            if not Patch22.EggESPV2Enabled then return end
+
+            local objNameLower = obj.Name:lower()
+
+            if objNameLower:find("egg") then
+                local targetPart = nil
+                local displayName = obj.Name
+
+                if obj:IsA("BasePart") then
+                    targetPart = obj
+                elseif obj:IsA("Model") then
+                    targetPart = obj.PrimaryPart
+                        or obj:FindFirstChild("Handle")
+                        or obj:FindFirstChild("Main")
+                        or obj:FindFirstChild("Part")
+                        or obj:FindFirstChildWhichIsA("MeshPart")
+                        or obj:FindFirstChildWhichIsA("BasePart")
+                end
+
+                if targetPart then
+                    eggCount = eggCount + 1
+                    createEggESPV2Billboard(targetPart, displayName)
+                end
+            end
+
+            if #obj:GetChildren() > 0 and not obj:IsA("PlayerGui") and not obj:IsA("Backpack") then
+                scanWorkspaceForEggs(obj, depth + 1)
+            end
+        end
+    end
+
+    scanWorkspaceForEggs(workspace, 0)
+
+    updateStatus("🥚 Egg ESP V2: Found " .. eggCount .. " eggs in Workspace", Color3.fromRGB(255, 220, 50))
+
+    -- Авто-обновление каждые 4 секунды
+    spawn(function()
+        while Patch22.EggESPV2Enabled and State.ScriptActive do
+            task.wait(4)
+            if Patch22.EggESPV2Enabled then
+                clearEggESPV2()
+                eggCount = 0
+                scanWorkspaceForEggs(workspace, 0)
+            end
+        end
+    end)
+end
+
+local function disableEggESPV2()
+    Patch22.EggESPV2Enabled = false
+    clearEggESPV2()
+    updateStatus("🥚 Egg ESP V2 DISABLED", C.TextMuted)
+end
+
+-- Переопределяем Egg ESP в главном меню
+pcall(function()
+    -- Находим старый toggleBtn для Egg ESP и отключаем
+    Addon.EggESPEnabled = false
+    if Addon.EggESPObjects then
+        for _, o in ipairs(Addon.EggESPObjects) do
+            pcall(function() o:Destroy() end)
+        end
+    end
+end)
+
+-- =============================================
+-- === PATCH: FIX WALLACE ESP (ТОЛЬКО ИГРОКИ + HP 1000) ===
+-- =============================================
+
+-- Удаляем NPC Wallace ESP если есть
+pcall(function()
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == "ESP_WALLACE_NPC" or obj.Name == "ESP_WALLACE_NPC_BB" then
+            obj:Destroy()
+        end
+    end
+end)
+
+-- Новая функция определения Wallace — ТОЛЬКО игроки с HP 1000
+local function isWallacePlayer(player)
+    if not player or not player:IsA("Player") then return false end
+    if player == LocalPlayer then return false end
+
+    local character = player.Character
+    if not character then return false end
+
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not humanoid then return false end
+
+    -- Wallace = игрок с 1000 HP
+    if humanoid.MaxHealth >= 1000 or humanoid.Health >= 1000 then
+        return true
+    end
+
+    return false
+end
+
+-- Переопределяем createESPForPlayer для правильного Wallace
+local _prevESPCreate = createESPForPlayer
+
+createESPForPlayer = function(player)
+    if not player:IsA("Player") then return end
+    if player == LocalPlayer then return end
+
+    removeESP(player)
+
+    local character = player.Character
+    if not character then return end
+
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    if not hrp or not humanoid then return end
+
+    local isWallace = isWallacePlayer(player)
+    local data = {}
+
+    -- Цвета
+    local baseColor = isWallace and C.Red or C.ESPMid
+    local nameText = isWallace and ("💀 WALLACE — " .. player.Name) or ("⚡ " .. player.Name)
+    local fillAlpha = isWallace and 0.45 or 0.75
+
+    -- Billboard
+    local bb = Instance.new("BillboardGui")
+    bb.Name = "ESP_BB_V22"
+    bb.Size = UDim2.new(0, 260, 0, 85)
+    bb.StudsOffset = Vector3.new(0, 4.2, 0)
+    bb.AlwaysOnTop = true
+    bb.Adornee = hrp
+    bb.MaxDistance = 2500
+    bb.Parent = hrp
+    data.billboard = bb
+
+    -- Контейнер
+    local container = Instance.new("Frame")
+    container.Size = UDim2.new(1, 0, 1, 0)
+    container.BackgroundTransparency = 1
+    container.Parent = bb
+
+    -- Бейдж имени
+    local nameBg = Instance.new("Frame")
+    nameBg.Size = UDim2.new(0.9, 0, 0, 26)
+    nameBg.Position = UDim2.new(0.05, 0, 0, 0)
+    nameBg.BackgroundColor3 = isWallace and Color3.fromRGB(90, 10, 10) or C.BgDark
+    nameBg.BackgroundTransparency = 0.15
+    nameBg.BorderSizePixel = 0
+    nameBg.Parent = container
+    Instance.new("UICorner", nameBg).CornerRadius = UDim.new(0, 7)
+
+    local nameStroke = Instance.new("UIStroke")
+    nameStroke.Color = baseColor
+    nameStroke.Thickness = isWallace and 2.5 or 1
+    nameStroke.Transparency = 0
+    nameStroke.Parent = nameBg
+
+    -- Иконка
+    local iconLbl = Instance.new("TextLabel")
+    iconLbl.Size = UDim2.new(0, 20, 0, 20)
+    iconLbl.Position = UDim2.new(0, 5, 0.5, -10)
+    iconLbl.BackgroundTransparency = 1
+    iconLbl.Text = isWallace and "💀" or "👤"
+    iconLbl.TextSize = 13
+    iconLbl.Font = Enum.Font.SourceSans
+    iconLbl.Parent = nameBg
+
+    -- Имя
+    local nameLbl = Instance.new("TextLabel")
+    nameLbl.Size = UDim2.new(1, -28, 1, 0)
+    nameLbl.Position = UDim2.new(0, 25, 0, 0)
+    nameLbl.BackgroundTransparency = 1
+    nameLbl.Text = nameText
+    nameLbl.TextColor3 = baseColor
+    nameLbl.TextSize = isWallace and 13 or 12
+    nameLbl.Font = Enum.Font.GothamBold
+    nameLbl.TextXAlignment = Enum.TextXAlignment.Left
+    nameLbl.TextTruncate = Enum.TextTruncate.AtEnd
+    nameLbl.TextStrokeTransparency = 0.1
+    nameLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    nameLbl.Parent = nameBg
+
+    -- Wallace badge
+    if isWallace then
+        local badge = Instance.new("Frame")
+        badge.Size = UDim2.new(0, 50, 0, 14)
+        badge.Position = UDim2.new(1, -55, 0, -7)
+        badge.BackgroundColor3 = C.Red
+        badge.BackgroundTransparency = 0.15
+        badge.BorderSizePixel = 0
+        badge.Parent = nameBg
+        Instance.new("UICorner", badge).CornerRadius = UDim.new(0, 4)
+
+        local badgeLbl = Instance.new("TextLabel")
+        badgeLbl.Size = UDim2.new(1, 0, 1, 0)
+        badgeLbl.BackgroundTransparency = 1
+        badgeLbl.Text = "⚠ 1000HP"
+        badgeLbl.TextColor3 = Color3.fromRGB(255, 200, 200)
+        badgeLbl.TextSize = 8
+        badgeLbl.Font = Enum.Font.GothamBold
+        badgeLbl.Parent = badge
+    end
+
+    -- Расстояние
+    local distBg = Instance.new("Frame")
+    distBg.Size = UDim2.new(0, 80, 0, 16)
+    distBg.Position = UDim2.new(0.5, -40, 0, 29)
+    distBg.BackgroundColor3 = Color3.fromRGB(20, 18, 12)
+    distBg.BackgroundTransparency = 0.2
+    distBg.BorderSizePixel = 0
+    distBg.Parent = container
+    Instance.new("UICorner", distBg).CornerRadius = UDim.new(0, 4)
+
+    local distLbl = Instance.new("TextLabel")
+    distLbl.Size = UDim2.new(1, 0, 1, 0)
+    distLbl.BackgroundTransparency = 1
+    distLbl.Text = "📏 0m"
+    distLbl.TextColor3 = C.TextLight
+    distLbl.TextSize = 9
+    distLbl.Font = Enum.Font.GothamBold
+    distLbl.TextStrokeTransparency = 0.2
+    distLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    distLbl.Parent = distBg
+
+    -- HP бар
+    local hpTrack = Instance.new("Frame")
+    hpTrack.Size = UDim2.new(0.75, 0, 0, 8)
+    hpTrack.Position = UDim2.new(0.125, 0, 0, 48)
+    hpTrack.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+    hpTrack.BackgroundTransparency = 0.15
+    hpTrack.BorderSizePixel = 0
+    hpTrack.Parent = container
+    Instance.new("UICorner", hpTrack).CornerRadius = UDim.new(1, 0)
+
+    local hpTrackStroke = Instance.new("UIStroke")
+    hpTrackStroke.Color = Color3.fromRGB(60, 60, 60)
+    hpTrackStroke.Thickness = 1
+    hpTrackStroke.Transparency = 0.4
+    hpTrackStroke.Parent = hpTrack
+
+    local hpFill = Instance.new("Frame")
+    hpFill.Size = UDim2.new(1, 0, 1, 0)
+    hpFill.BackgroundColor3 = C.Green
+    hpFill.BorderSizePixel = 0
+    hpFill.Parent = hpTrack
+    Instance.new("UICorner", hpFill).CornerRadius = UDim.new(1, 0)
+
+    local hpGrad = Instance.new("UIGradient")
+    hpGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 180, 180)),
+    }
+    hpGrad.Rotation = 90
+    hpGrad.Parent = hpFill
+
+    -- HP текст
+    local hpLbl = Instance.new("TextLabel")
+    hpLbl.Size = UDim2.new(1, 0, 0, 12)
+    hpLbl.Position = UDim2.new(0, 0, 0, 58)
+    hpLbl.BackgroundTransparency = 1
+    hpLbl.Text = "❤️ 100/100"
+    hpLbl.TextColor3 = C.Green
+    hpLbl.TextSize = 9
+    hpLbl.Font = Enum.Font.GothamBold
+    hpLbl.TextStrokeTransparency = 0.15
+    hpLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+    hpLbl.Parent = container
+
+    -- Skeleton Indicator (Wallace)
+    if isWallace then
+        local dangerLbl = Instance.new("TextLabel")
+        dangerLbl.Size = UDim2.new(1, 0, 0, 14)
+        dangerLbl.Position = UDim2.new(0, 0, 0, 72)
+        dangerLbl.BackgroundTransparency = 1
+        dangerLbl.Text = "🚨 DANGER — WALLACE PLAYER 🚨"
+        dangerLbl.TextColor3 = C.Red
+        dangerLbl.TextSize = 10
+        dangerLbl.Font = Enum.Font.GothamBold
+        dangerLbl.TextStrokeTransparency = 0
+        dangerLbl.TextStrokeColor3 = Color3.new(0, 0, 0)
+        dangerLbl.Parent = container
+    end
+
+    -- Highlight
+    local highlight = Instance.new("Highlight")
+    highlight.Name = "ESP_HL_V22"
+    highlight.FillColor = baseColor
+    highlight.FillTransparency = fillAlpha
+    highlight.OutlineColor = baseColor
+    highlight.OutlineTransparency = isWallace and 0 or 0.1
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = character
+    data.highlight = highlight
+
+    -- Пульсация Wallace
+    if isWallace then
+        spawn(function()
+            while State.ESPEnabled and character and character.Parent do
+                tweenProperty(nameStroke, {Transparency = 0.6, Thickness = 1.5}, 0.7, Enum.EasingStyle.Sine)
+                tweenProperty(highlight, {FillTransparency = 0.7, OutlineTransparency = 0.5}, 0.7, Enum.EasingStyle.Sine)
+                task.wait(0.7)
+                tweenProperty(nameStroke, {Transparency = 0, Thickness = 2.5}, 0.7, Enum.EasingStyle.Sine)
+                tweenProperty(highlight, {FillTransparency = 0.45, OutlineTransparency = 0}, 0.7, Enum.EasingStyle.Sine)
+                task.wait(0.7)
+            end
+        end)
+    end
+
+    -- Обновление
+    local updateConn = RunService.RenderStepped:Connect(function()
+        if not State.ESPEnabled or not character or not character.Parent then
+            removeESP(player)
+            return
+        end
+
+        local currentHRP = character:FindFirstChild("HumanoidRootPart")
+        local currentHum = character:FindFirstChildOfClass("Humanoid")
+        local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if currentHRP and localHRP then
+            local dist = math.floor((currentHRP.Position - localHRP.Position).Magnitude)
+            distLbl.Text = "📏 " .. dist .. "m"
+
+            if isWallace then
+                if dist < 30 then
+                    distLbl.Text = "🚨 " .. dist .. "m CLOSE!"
+                    distLbl.TextColor3 = C.Red
+                else
+                    distLbl.TextColor3 = C.Orange
+                end
+            else
+                if dist < 25 then
+                    nameLbl.TextColor3 = C.ESPNear
+                    highlight.OutlineColor = C.ESPNear
+                    highlight.FillColor = C.ESPNear
+                    nameStroke.Color = C.ESPNear
+                elseif dist < 60 then
+                    nameLbl.TextColor3 = C.ESPMid
+                    highlight.OutlineColor = C.ESPMid
+                    highlight.FillColor = C.ESPMid
+                    nameStroke.Color = C.ESPMid
+                else
+                    nameLbl.TextColor3 = C.ESPFar
+                    highlight.OutlineColor = C.ESPFar
+                    highlight.FillColor = C.ESPFar
+                    nameStroke.Color = C.ESPFar
+                end
+            end
+        end
+
+        if currentHum then
+            local ratio = math.clamp(currentHum.Health / currentHum.MaxHealth, 0, 1)
+            hpFill.Size = UDim2.new(ratio, 0, 1, 0)
+            hpLbl.Text = "❤️ " .. math.floor(currentHum.Health) .. "/" .. math.floor(currentHum.MaxHealth)
+
+            if ratio < 0.3 then
+                hpFill.BackgroundColor3 = C.Red
+                hpLbl.TextColor3 = C.Red
+            elseif ratio < 0.6 then
+                hpFill.BackgroundColor3 = C.Orange
+                hpLbl.TextColor3 = C.Orange
+            else
+                hpFill.BackgroundColor3 = C.Green
+                hpLbl.TextColor3 = C.Green
+            end
+
+            -- Проверяем не стал ли игрок Wallace (динамическое определение)
+            if currentHum.MaxHealth >= 1000 and not isWallace then
+                -- Пересоздаём ESP для нового Wallace
+                task.defer(function()
+                    if State.ESPEnabled then
+                        createESPForPlayer(player)
+                    end
+                end)
+            end
+        end
+    end)
+
+    data.updateConn = updateConn
+    espObjects[player] = data
+end
+
+-- =============================================
+-- === PATCH: AIMBOT V2 (круг + ПКМ) ===
+-- =============================================
+
+-- Отключаем старый aimbot
+pcall(function()
+    Addon.AimbotEnabled = false
+    if aimbotConnection then
+        aimbotConnection:Disconnect()
+        aimbotConnection = nil
+    end
+end)
+
+-- Круг FOV на экране
+local AimbotCircle = Instance.new("Frame")
+AimbotCircle.Name = "AimbotFOVCircle"
+AimbotCircle.Size = UDim2.new(0, Patch22.AimbotFOVRadius * 2, 0, Patch22.AimbotFOVRadius * 2)
+AimbotCircle.Position = UDim2.new(0.5, -Patch22.AimbotFOVRadius, 0.5, -Patch22.AimbotFOVRadius)
+AimbotCircle.BackgroundTransparency = 1
+AimbotCircle.Visible = false
+AimbotCircle.ZIndex = 50
+AimbotCircle.Parent = ScreenGui
+
+-- Внешний круг
+local outerCircle = Instance.new("Frame")
+outerCircle.Size = UDim2.new(1, 0, 1, 0)
+outerCircle.BackgroundColor3 = C.Red
+outerCircle.BackgroundTransparency = 0.95
+outerCircle.BorderSizePixel = 0
+outerCircle.ZIndex = 50
+outerCircle.Parent = AimbotCircle
+Instance.new("UICorner", outerCircle).CornerRadius = UDim.new(1, 0)
+
+local outerStroke = Instance.new("UIStroke")
+outerStroke.Color = C.Red
+outerStroke.Thickness = 2
+outerStroke.Transparency = 0.2
+outerStroke.Parent = outerCircle
+
+-- Внутренний круг (маленькая точка в центре)
+local centerDot = Instance.new("Frame")
+centerDot.Size = UDim2.new(0, 6, 0, 6)
+centerDot.Position = UDim2.new(0.5, -3, 0.5, -3)
+centerDot.BackgroundColor3 = C.Red
+centerDot.BackgroundTransparency = 0.2
+centerDot.BorderSizePixel = 0
+centerDot.ZIndex = 51
+centerDot.Parent = AimbotCircle
+Instance.new("UICorner", centerDot).CornerRadius = UDim.new(1, 0)
+
+-- Крестик в центре
+local crossH = Instance.new("Frame")
+crossH.Size = UDim2.new(0, 16, 0, 1)
+crossH.Position = UDim2.new(0.5, -8, 0.5, 0)
+crossH.BackgroundColor3 = C.Red
+crossH.BackgroundTransparency = 0.3
+crossH.BorderSizePixel = 0
+crossH.ZIndex = 51
+crossH.Parent = AimbotCircle
+
+local crossV = Instance.new("Frame")
+crossV.Size = UDim2.new(0, 1, 0, 16)
+crossV.Position = UDim2.new(0.5, 0, 0.5, -8)
+crossV.BackgroundColor3 = C.Red
+crossV.BackgroundTransparency = 0.3
+crossV.BorderSizePixel = 0
+crossV.ZIndex = 51
+crossV.Parent = AimbotCircle
+
+-- Текст статуса aimbot
+local aimStatusLbl = Instance.new("TextLabel")
+aimStatusLbl.Size = UDim2.new(0, 120, 0, 16)
+aimStatusLbl.Position = UDim2.new(0.5, -60, 1, 5)
+aimStatusLbl.BackgroundColor3 = C.BgDark
+aimStatusLbl.BackgroundTransparency = 0.3
+aimStatusLbl.Text = "🎯 AIMBOT"
+aimStatusLbl.TextColor3 = C.Red
+aimStatusLbl.TextSize = 10
+aimStatusLbl.Font = Enum.Font.GothamBold
+aimStatusLbl.BorderSizePixel = 0
+aimStatusLbl.ZIndex = 52
+aimStatusLbl.Parent = AimbotCircle
+Instance.new("UICorner", aimStatusLbl).CornerRadius = UDim.new(0, 4)
+
+-- Имя цели
+local aimTargetLbl = Instance.new("TextLabel")
+aimTargetLbl.Size = UDim2.new(0, 160, 0, 14)
+aimTargetLbl.Position = UDim2.new(0.5, -80, 1, 22)
+aimTargetLbl.BackgroundTransparency = 1
+aimTargetLbl.Text = ""
+aimTargetLbl.TextColor3 = C.TextLight
+aimTargetLbl.TextSize = 9
+aimTargetLbl.Font = Enum.Font.Gotham
+aimTargetLbl.ZIndex = 52
+aimTargetLbl.Parent = AimbotCircle
+
+local function getPlayerInFOV()
+    local cam = workspace.CurrentCamera
+    local viewportSize = cam.ViewportSize
+    local centerScreen = Vector2.new(viewportSize.X / 2, viewportSize.Y / 2)
+
+    local closestPlayer = nil
+    local closestScreenDist = Patch22.AimbotFOVRadius
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            local head = player.Character:FindFirstChild("Head")
+            local hum = player.Character:FindFirstChildOfClass("Humanoid")
+
+            if head and hum and hum.Health > 0 then
+                local screenPos, onScreen = cam:WorldToViewportPoint(head.Position)
+
+                if onScreen then
+                    local screenPoint = Vector2.new(screenPos.X, screenPos.Y)
+                    local distFromCenter = (screenPoint - centerScreen).Magnitude
+
+                    if distFromCenter < closestScreenDist then
+                        closestScreenDist = distFromCenter
+                        closestPlayer = player
+                    end
+                end
+            end
+        end
+    end
+
+    return closestPlayer
+end
+
+local aimbotV2Connection = nil
+local aimbotRMBHeld = false
+
+local function enableAimbotV2()
+    Patch22.AimbotV2Enabled = true
+    AimbotCircle.Visible = true
+
+    -- Пульсация круга
+    spawn(function()
+        while Patch22.AimbotV2Enabled do
+            tweenProperty(outerStroke, {Transparency = 0.6}, 1, Enum.EasingStyle.Sine)
+            task.wait(1)
+            tweenProperty(outerStroke, {Transparency = 0.15}, 1, Enum.EasingStyle.Sine)
+            task.wait(1)
+        end
+    end)
+
+    aimbotV2Connection = RunService.RenderStepped:Connect(function()
+        if not Patch22.AimbotV2Enabled then return end
+
+        local targetInFOV = getPlayerInFOV()
+
+        if targetInFOV then
+            local isW = isWallacePlayer(targetInFOV)
+            aimTargetLbl.Text = (isW and "💀 " or "👤 ") .. targetInFOV.Name
+            aimTargetLbl.TextColor3 = isW and C.Red or C.TextLight
+            outerStroke.Color = isW and C.Red or Color3.fromRGB(255, 165, 0)
+
+            -- Если ПКМ зажата — наводить
+            if aimbotRMBHeld and targetInFOV.Character then
+                local head = targetInFOV.Character:FindFirstChild("Head")
+                if head then
+                    local cam = workspace.CurrentCamera
+                    local smoothness = 0.15
+                    local targetCF = CFrame.new(cam.CFrame.Position, head.Position)
+                    cam.CFrame = cam.CFrame:Lerp(targetCF, smoothness)
+
+                    aimStatusLbl.Text = "🔒 LOCKED"
+                    aimStatusLbl.TextColor3 = C.Green
+                    outerStroke.Thickness = 3
+
+                    centerDot.BackgroundColor3 = C.Green
+                    centerDot.Size = UDim2.new(0, 10, 0, 10)
+                    centerDot.Position = UDim2.new(0.5, -5, 0.5, -5)
+                end
+            else
+                aimStatusLbl.Text = "🎯 AIMBOT"
+                aimStatusLbl.TextColor3 = C.Red
+                outerStroke.Thickness = 2
+
+                centerDot.BackgroundColor3 = C.Red
+                centerDot.Size = UDim2.new(0, 6, 0, 6)
+                centerDot.Position = UDim2.new(0.5, -3, 0.5, -3)
+            end
+        else
+            aimTargetLbl.Text = "No target in FOV"
+            aimTargetLbl.TextColor3 = C.TextDark
+            aimStatusLbl.Text = "🎯 AIMBOT"
+            aimStatusLbl.TextColor3 = C.TextMuted
+        end
+    end)
+
+    updateStatus("🎯 Aimbot V2 ENABLED — RMB to lock", C.Red)
+end
+
+local function disableAimbotV2()
+    Patch22.AimbotV2Enabled = false
+    AimbotCircle.Visible = false
+
+    if aimbotV2Connection then
+        aimbotV2Connection:Disconnect()
+        aimbotV2Connection = nil
+    end
+
+    updateStatus("🎯 Aimbot V2 DISABLED", C.TextMuted)
+end
+
+-- ПКМ обработка
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aimbotRMBHeld = true
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input, gp)
+    if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        aimbotRMBHeld = false
+    end
+end)
+
+-- =============================================
+-- === PATCH: 5 НОВЫХ ШЕЙДЕРОВ ===
+-- =============================================
+
+local newShaderPresets = {
+    {
+        Name = "Golden Sunset",
+        Icon = "🌅",
+        Desc = "Warm golden hour lighting",
+        Brightness = 0.12,
+        Contrast = 0.18,
+        Saturation = 0.35,
+        Tint = Color3.fromRGB(255, 225, 180),
+        BloomIntensity = 0.5,
+        BloomSize = 35,
+        SunraysIntensity = 0.2,
+        Color = Color3.fromRGB(255, 180, 60),
+    },
+    {
+        Name = "Midnight Blue",
+        Icon = "🌙",
+        Desc = "Dark blue night atmosphere",
+        Brightness = -0.08,
+        Contrast = 0.22,
+        Saturation = -0.1,
+        Tint = Color3.fromRGB(180, 195, 230),
+        BloomIntensity = 0.3,
+        BloomSize = 40,
+        SunraysIntensity = 0.05,
+        Color = Color3.fromRGB(80, 120, 220),
+    },
+    {
+        Name = "Toxic Cheese",
+        Icon = "☢️",
+        Desc = "Radioactive green toxic vibe",
+        Brightness = 0.06,
+        Contrast = 0.28,
+        Saturation = 0.4,
+        Tint = Color3.fromRGB(220, 255, 200),
+        BloomIntensity = 0.6,
+        BloomSize = 28,
+        SunraysIntensity = 0.15,
+        Color = Color3.fromRGB(100, 255, 80),
+    },
+    {
+        Name = "Vintage Film",
+        Icon = "📽️",
+        Desc = "Old film grain look with sepia",
+        Brightness = -0.03,
+        Contrast = 0.35,
+        Saturation = -0.25,
+        Tint = Color3.fromRGB(240, 220, 190),
+        BloomIntensity = 0.2,
+        BloomSize = 50,
+        SunraysIntensity = 0.08,
+        Color = Color3.fromRGB(200, 170, 120),
+    },
+    {
+        Name = "Cyber Pink",
+        Icon = "🌸",
+        Desc = "Cyberpunk pink neon aesthetic",
+        Brightness = 0.04,
+        Contrast = 0.3,
+        Saturation = 0.45,
+        Tint = Color3.fromRGB(255, 210, 240),
+        BloomIntensity = 0.7,
+        BloomSize = 32,
+        SunraysIntensity = 0.1,
+        Color = Color3.fromRGB(255, 100, 180),
+    },
+}
+
+local function applyShaderPreset(preset)
+    -- Очистка старых
+    for _, obj in ipairs(Lighting:GetChildren()) do
+        if obj.Name:find("WallaceShaderV2") then obj:Destroy() end
+    end
+
+    local cc = Instance.new("ColorCorrectionEffect")
+    cc.Name = "WallaceShaderV2_CC"
+    cc.Brightness = preset.Brightness
+    cc.Contrast = preset.Contrast
+    cc.Saturation = preset.Saturation
+    cc.TintColor = preset.Tint
+    cc.Parent = Lighting
+
+    local bloom = Instance.new("BloomEffect")
+    bloom.Name = "WallaceShaderV2_Bloom"
+    bloom.Intensity = preset.BloomIntensity
+    bloom.Size = preset.BloomSize
+    bloom.Threshold = 1.0
+    bloom.Parent = Lighting
+
+    local sunrays = Instance.new("SunRaysEffect")
+    sunrays.Name = "WallaceShaderV2_Sunrays"
+    sunrays.Intensity = preset.SunraysIntensity
+    sunrays.Spread = 0.9
+    sunrays.Parent = Lighting
+
+    updateStatus("🎨 Shader: " .. preset.Name, preset.Color)
+end
+
+local function removeShaderPresets()
+    for _, obj in ipairs(Lighting:GetChildren()) do
+        if obj.Name:find("WallaceShaderV2") then obj:Destroy() end
+    end
+end
+
+-- =============================================
+-- === PATCH: ПРИВЕТСТВИЕ (СПРАВА ПО ЦЕНТРУ) ===
+-- =============================================
+
+-- Удаляем старое приветствие если есть
+pcall(function()
+    local oldGreet = ScreenGui:FindFirstChild("GreetingFrame")
+    if oldGreet then oldGreet:Destroy() end
+end)
+
+local function createGreetingV2()
+    local greetFrame = Instance.new("Frame")
+    greetFrame.Name = "GreetingFrameV2"
+    greetFrame.Size = UDim2.new(0, 300, 0, 110)
+    greetFrame.Position = UDim2.new(1, 310, 0.5, -55)
+    greetFrame.BackgroundColor3 = C.BgDark
+    greetFrame.BackgroundTransparency = 0.02
+    greetFrame.BorderSizePixel = 0
+    greetFrame.ZIndex = 25
+    greetFrame.Parent = ScreenGui
+    Instance.new("UICorner", greetFrame).CornerRadius = UDim.new(0, 14)
+
+    -- Тень
+    local gShadow = Instance.new("ImageLabel")
+    gShadow.Size = UDim2.new(1, 24, 1, 24)
+    gShadow.Position = UDim2.new(0, -12, 0, -12)
+    gShadow.BackgroundTransparency = 1
+    gShadow.Image = "rbxassetid://6015897843"
+    gShadow.ImageColor3 = Color3.new(0, 0, 0)
+    gShadow.ImageTransparency = 0.35
+    gShadow.ScaleType = Enum.ScaleType.Slice
+    gShadow.SliceCenter = Rect.new(49, 49, 450, 450)
+    gShadow.ZIndex = 24
+    gShadow.Parent = greetFrame
+
+    -- Обводка
+    local gStroke = Instance.new("UIStroke")
+    gStroke.Color = C.Gold
+    gStroke.Thickness = 2
+    gStroke.Transparency = 0.15
+    gStroke.Parent = greetFrame
+
+    -- Градиент фона
+    local gGrad = Instance.new("UIGradient")
+    gGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(38, 30, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(22, 16, 12)),
+    }
+    gGrad.Rotation = 135
+    gGrad.Parent = greetFrame
+
+    -- Золотая линия сверху
+    local gLine = Instance.new("Frame")
+    gLine.Size = UDim2.new(1, 0, 0, 3)
+    gLine.BackgroundColor3 = C.Gold
+    gLine.BorderSizePixel = 0
+    gLine.ZIndex = 26
+    gLine.Parent = greetFrame
+    Instance.new("UICorner", gLine).CornerRadius = UDim.new(0, 14)
+
+    local gLineGrad = Instance.new("UIGradient")
+    gLineGrad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, C.GoldDark),
+        ColorSequenceKeypoint.new(0.5, C.GoldGlow),
+        ColorSequenceKeypoint.new(1, C.GoldDark),
+    }
+    gLineGrad.Parent = gLine
+
+    -- Аватар
+    local avatarContainer = Instance.new("Frame")
+    avatarContainer.Size = UDim2.new(0, 62, 0, 62)
+    avatarContainer.Position = UDim2.new(0, 16, 0.5, -31)
+    avatarContainer.BackgroundColor3 = C.Gold
+    avatarContainer.BackgroundTransparency = 0.6
+    avatarContainer.BorderSizePixel = 0
+    avatarContainer.ZIndex = 26
+    avatarContainer.Parent = greetFrame
+    Instance.new("UICorner", avatarContainer).CornerRadius = UDim.new(1, 0)
+
+    local avatarStroke = Instance.new("UIStroke")
+    avatarStroke.Color = C.Gold
+    avatarStroke.Thickness = 2.5
+    avatarStroke.Transparency = 0
+    avatarStroke.Parent = avatarContainer
+
+    -- Свечение вокруг аватара
+    local avatarGlow = Instance.new("ImageLabel")
+    avatarGlow.Size = UDim2.new(1, 16, 1, 16)
+    avatarGlow.Position = UDim2.new(0, -8, 0, -8)
+    avatarGlow.BackgroundTransparency = 1
+    avatarGlow.Image = "rbxassetid://6015897843"
+    avatarGlow.ImageColor3 = C.Gold
+    avatarGlow.ImageTransparency = 0.85
+    avatarGlow.ScaleType = Enum.ScaleType.Slice
+    avatarGlow.SliceCenter = Rect.new(49, 49, 450, 450)
+    avatarGlow.ZIndex = 25
+    avatarGlow.Parent = avatarContainer
+
+    local avatarImg = Instance.new("ImageLabel")
+    avatarImg.Size = UDim2.new(1, -6, 1, -6)
+    avatarImg.Position = UDim2.new(0, 3, 0, 3)
+    avatarImg.BackgroundTransparency = 1
+    avatarImg.ZIndex = 27
+    avatarImg.Parent = avatarContainer
+    Instance.new("UICorner", avatarImg).CornerRadius = UDim.new(1, 0)
+
+    -- Загрузка аватара
+    pcall(function()
+        avatarImg.Image = Players:GetUserThumbnailAsync(
+            LocalPlayer.UserId,
+            Enum.ThumbnailType.HeadShot,
+            Enum.ThumbnailSize.Size150x150
+        )
+    end)
+
+    -- Приветствие
+    local welcomeLbl = Instance.new("TextLabel")
+    welcomeLbl.Size = UDim2.new(1, -100, 0, 20)
+    welcomeLbl.Position = UDim2.new(0, 88, 0, 15)
+    welcomeLbl.BackgroundTransparency = 1
+    welcomeLbl.Text = "Welcome back! 🧀"
+    welcomeLbl.TextColor3 = C.GoldLight
+    welcomeLbl.TextSize = 16
+    welcomeLbl.Font = Enum.Font.GothamBold
+    welcomeLbl.TextXAlignment = Enum.TextXAlignment.Left
+    welcomeLbl.ZIndex = 26
+    welcomeLbl.Parent = greetFrame
+
+    -- Ник
+    local nickLbl = Instance.new("TextLabel")
+    nickLbl.Size = UDim2.new(1, -100, 0, 16)
+    nickLbl.Position = UDim2.new(0, 88, 0, 38)
+    nickLbl.BackgroundTransparency = 1
+    nickLbl.Text = "⚡ " .. LocalPlayer.DisplayName
+    nickLbl.TextColor3 = C.TextWhite
+    nickLbl.TextSize = 13
+    nickLbl.Font = Enum.Font.GothamBold
+    nickLbl.TextXAlignment = Enum.TextXAlignment.Left
+    nickLbl.TextTruncate = Enum.TextTruncate.AtEnd
+    nickLbl.ZIndex = 26
+    nickLbl.Parent = greetFrame
+
+    -- Username
+    local userLbl = Instance.new("TextLabel")
+    userLbl.Size = UDim2.new(1, -100, 0, 14)
+    userLbl.Position = UDim2.new(0, 88, 0, 56)
+    userLbl.BackgroundTransparency = 1
+    userLbl.Text = "@" .. LocalPlayer.Name
+    userLbl.TextColor3 = C.TextMuted
+    userLbl.TextSize = 10
+    userLbl.Font = Enum.Font.Gotham
+    userLbl.TextXAlignment = Enum.TextXAlignment.Left
+    userLbl.ZIndex = 26
+    userLbl.Parent = greetFrame
+
+    -- Версия
+    local verLbl = Instance.new("TextLabel")
+    verLbl.Size = UDim2.new(1, -100, 0, 12)
+    verLbl.Position = UDim2.new(0, 88, 0, 74)
+    verLbl.BackgroundTransparency = 1
+    verLbl.Text = "✦ You vs Wallace • Ultimate v2.2 ✦"
+    verLbl.TextColor3 = C.TextDark
+    verLbl.TextSize = 9
+    verLbl.Font = Enum.Font.Gotham
+    verLbl.TextXAlignment = Enum.TextXAlignment.Left
+    verLbl.ZIndex = 26
+    verLbl.Parent = greetFrame
+
+    -- Прогресс бар загрузки
+    local loadBar = Instance.new("Frame")
+    loadBar.Size = UDim2.new(0.85, 0, 0, 3)
+    loadBar.Position = UDim2.new(0.075, 0, 1, -10)
+    loadBar.BackgroundColor3 = Color3.fromRGB(40, 35, 25)
+    loadBar.BorderSizePixel = 0
+    loadBar.ZIndex = 26
+    loadBar.Parent = greetFrame
+    Instance.new("UICorner", loadBar).CornerRadius = UDim.new(1, 0)
+
+    local loadFill = Instance.new("Frame")
+    loadFill.Size = UDim2.new(0, 0, 1, 0)
+    loadFill.BackgroundColor3 = C.Gold
+    loadFill.BorderSizePixel = 0
+    loadFill.ZIndex = 27
+    loadFill.Parent = loadBar
+    Instance.new("UICorner", loadFill).CornerRadius = UDim.new(1, 0)
+
+    -- Анимация входа
+    task.wait(0.2)
+    tweenProperty(greetFrame, {
+        Position = UDim2.new(1, -315, 0.5, -55)
+    }, 0.8, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+    -- Прогресс бар
+    task.wait(0.3)
+    tweenProperty(loadFill, {Size = UDim2.new(1, 0, 1, 0)}, 5, Enum.EasingStyle.Linear)
+
+    -- Пульсация аватара
+    spawn(function()
+        for _ = 1, 4 do
+            tweenProperty(avatarStroke, {Transparency = 0.5, Thickness = 1.5}, 0.6, Enum.EasingStyle.Sine)
+            tweenProperty(avatarGlow, {ImageTransparency = 0.7}, 0.6, Enum.EasingStyle.Sine)
+            task.wait(0.6)
+            tweenProperty(avatarStroke, {Transparency = 0, Thickness = 2.5}, 0.6, Enum.EasingStyle.Sine)
+            tweenProperty(avatarGlow, {ImageTransparency = 0.85}, 0.6, Enum.EasingStyle.Sine)
+            task.wait(0.6)
+        end
+    end)
+
+    -- Скрытие через 7 секунд
+    task.wait(6)
+    tweenProperty(greetFrame, {
+        Position = UDim2.new(1, 310, 0.5, -55),
+        BackgroundTransparency = 0.5
+    }, 0.7, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    task.wait(0.8)
+    greetFrame:Destroy()
+end
+
+spawn(createGreetingV2)
+
+-- =============================================
+-- === PATCH: ЛИСТ ОБНОВЛЕНИЙ (CHANGELOG) ===
+-- =============================================
+
+local changelogData = {
+    {
+        Version = "v2.2 — Current Update",
+        Date = os.date("%d.%m.%Y"),
+        Color = C.Gold,
+        Changes = {
+            {icon = "🔧", text = "FIX: Egg ESP теперь сканирует через Workspace"},
+            {icon = "🔧", text = "FIX: Egg ESP отображает реальные имена объектов"},
+            {icon = "🔧", text = "FIX: Wallace ESP подсвечивает ТОЛЬКО игроков"},
+            {icon = "🔧", text = "FIX: Wallace определяется по HP ≥ 1000"},
+            {icon = "🔧", text = "FIX: Убрано подсвечивание NPC/объектов как Wallace"},
+            {icon = "🎯", text = "NEW: Aimbot V2 с кругом FOV на экране"},
+            {icon = "🎯", text = "NEW: ПКМ для захвата цели (плавное наведение)"},
+            {icon = "🎯", text = "NEW: Отображение имени цели в круге FOV"},
+            {icon = "🎨", text = "NEW: 5 новых шейдеров (Golden Sunset, Midnight Blue, и др.)"},
+            {icon = "🎨", text = "NEW: Каждый шейдер имеет Bloom + Sunrays + Color"},
+            {icon = "📋", text = "NEW: Лист обновлений (Changelog) во вкладке Info"},
+            {icon = "👋", text = "FIX: Приветствие перенесено вправо по центру экрана"},
+            {icon = "👋", text = "NEW: Аватар игрока с анимацией свечения"},
+            {icon = "✨", text = "NEW: Ультра-детализация GUI (угловые декорации)"},
+            {icon = "✨", text = "NEW: Микро-паттерны на фоне"},
+            {icon = "✨", text = "NEW: Анимированный индикатор активной вкладки"},
+            {icon = "✨", text = "NEW: Свечение краёв и декоративные точки"},
+        }
+    },
+    {
+        Version = "v2.1 — Addon Pack",
+        Date = "—",
+        Color = C.TextMuted,
+        Changes = {
+            {icon = "👁", text = "Wallace Red ESP (NPC + Players)"},
+            {icon = "🎯", text = "Basic Aimbot (auto-aim nearest)"},
+            {icon = "🥚", text = "Basic Egg ESP"},
+            {icon = "✨", text = "Cinematic Shaders (3 presets)"},
+            {icon = "👋", text = "Player greeting с аватаром"},
+            {icon = "⌨️", text = "Клавиша K для закрытия GUI со звуком"},
+            {icon = "🔔", text = "Уведомления при входе/выходе игроков"},
+            {icon = "🌟", text = "Плавающие частицы и водяной знак"},
+        }
+    },
+    {
+        Version = "v2.0 — Ultimate Release",
+        Date = "—",
+        Color = C.TextDark,
+        Changes = {
+            {icon = "👁", text = "Player ESP с расстоянием и HP баром"},
+            {icon = "🧀", text = "Farm Cheese TP (Y: 520.08)"},
+            {icon = "🛡️", text = "Safe Zone TP"},
+            {icon = "🥚", text = "Get All Eggs (сбор яиц)"},
+            {icon = "👻", text = "Invisible mode"},
+            {icon = "🏃", text = "Speed и Jump Power слайдеры"},
+            {icon = "🌫️", text = "NoFog"},
+            {icon = "💡", text = "FullBright"},
+            {icon = "👥", text = "Teleport to Player (список игроков)"},
+            {icon = "📊", text = "Панель статистики (FPS, координаты, HP)"},
+        }
+    },
+}
+
+-- Добавляем Changelog в Info Tab
+local infoTab = tabFrames["Info"]
+
+createSectionHeader(infoTab, "Changelog", "📋", 40)
+
+for verIdx, version in ipairs(changelogData) do
+    -- Заголовок версии
+    local verHeader = Instance.new("Frame")
+    verHeader.Size = UDim2.new(1, 0, 0, 28)
+    verHeader.BackgroundColor3 = C.BgCard
+    verHeader.BorderSizePixel = 0
+    verHeader.LayoutOrder = 40 + verIdx * 100
+    verHeader.Parent = infoTab
+    Instance.new("UICorner", verHeader).CornerRadius = UDim.new(0, 8)
+
+    local verStroke = Instance.new("UIStroke")
+    verStroke.Color = version.Color
+    verStroke.Thickness = 1
+    verStroke.Transparency = 0.4
+    verStroke.Parent = verHeader
+
+    local verLbl = Instance.new("TextLabel")
+    verLbl.Size = UDim2.new(1, -70, 1, 0)
+    verLbl.Position = UDim2.new(0, 10, 0, 0)
+    verLbl.BackgroundTransparency = 1
+    verLbl.Text = "📋 " .. version.Version
+    verLbl.TextColor3 = version.Color
+    verLbl.TextSize = 12
+    verLbl.Font = Enum.Font.GothamBold
+    verLbl.TextXAlignment = Enum.TextXAlignment.Left
+    verLbl.ZIndex = 3
+    verLbl.Parent = verHeader
+
+    local dateLbl = Instance.new("TextLabel")
+    dateLbl.Size = UDim2.new(0, 60, 1, 0)
+    dateLbl.Position = UDim2.new(1, -65, 0, 0)
+    dateLbl.BackgroundTransparency = 1
+    dateLbl.Text = version.Date
+    dateLbl.TextColor3 = C.TextDark
+    dateLbl.TextSize = 9
+    dateLbl.Font = Enum.Font.Gotham
+    dateLbl.TextXAlignment = Enum.TextXAlignment.Right
+    dateLbl.ZIndex = 3
+    dateLbl.Parent = verHeader
+
+    -- Изменения
+    local changesContainer = Instance.new("Frame")
+    changesContainer.Size = UDim2.new(1, 0, 0, #version.Changes * 18 + 10)
+    changesContainer.BackgroundColor3 = C.BgCard
+    changesContainer.BackgroundTransparency = 0.3
+    changesContainer.BorderSizePixel = 0
+    changesContainer.LayoutOrder = 40 + verIdx * 100 + 1
+    changesContainer.Parent = infoTab
+    Instance.new("UICorner", changesContainer).CornerRadius = UDim.new(0, 8)
+
+    for chIdx, change in ipairs(version.Changes) do
+        local chLbl = Instance.new("TextLabel")
+        chLbl.Size = UDim2.new(1, -16, 0, 16)
+        chLbl.Position = UDim2.new(0, 8, 0, 5 + (chIdx - 1) * 18)
+        chLbl.BackgroundTransparency = 1
+        chLbl.Text = change.icon .. "  " .. change.text
+        chLbl.TextColor3 = verIdx == 1 and C.TextLight or C.TextMuted
+        chLbl.TextSize = 10
+        chLbl.Font = Enum.Font.Gotham
+        chLbl.TextXAlignment = Enum.TextXAlignment.Left
+        chLbl.TextTruncate = Enum.TextTruncate.AtEnd
+        chLbl.ZIndex = 3
+        chLbl.Parent = changesContainer
+    end
+end
+
+-- =============================================
+-- === PATCH: ДОБАВЛЕНИЕ КНОПОК В ВКЛАДКИ ===
+-- =============================================
+
+-- === Main Tab: Обновлённый Aimbot V2 ===
+local mainTab = tabFrames["Main"]
+
+-- Находим старую карточку aimbot и скрываем
+pcall(function()
+    for _, child in ipairs(mainTab:GetChildren()) do
+        if child.Name and child.Name:find("Aimbot") then
+            child.Visible = false
+            child.Size = UDim2.new(0, 0, 0, 0)
+        end
+    end
+end)
+
+createSectionHeader(mainTab, "Combat V2", "🎯", 40)
+
+local aimbotV2Card = createCard(mainTab, 41)
+aimbotV2Card.Size = UDim2.new(1, 0, 0, 68)
+addCardContent(aimbotV2Card, "🎯", "Aimbot V2 — FOV Circle", "RMB to lock on • Circle shows FOV range")
+addToggle(aimbotV2Card, function(on)
+    if on then enableAimbotV2() else disableAimbotV2() end
+end)
+
+-- FOV слайдер
+createSlider(mainTab, "Aimbot FOV Radius", "⭕", 30, 300, 120, 42, function(val)
+    Patch22.AimbotFOVRadius = val
+    AimbotCircle.Size = UDim2.new(0, val * 2, 0, val * 2)
+    AimbotCircle.Position = UDim2.new(0.5, -val, 0.5, -val)
+end)
+
+-- === Main Tab: Обновлённый Egg ESP V2 ===
+pcall(function()
+    for _, child in ipairs(mainTab:GetChildren()) do
+        if child.Name and child.Name:find("Egg") and child:IsA("Frame") then
+            child.Visible = false
+            child.Size = UDim2.new(0, 0, 0, 0)
+        end
+    end
+end)
+
+createSectionHeader(mainTab, "World ESP V2", "🌍", 50)
+
+local eggV2Card = createCard(mainTab, 51)
+eggV2Card.Size = UDim2.new(1, 0, 0, 68)
+addCardContent(eggV2Card, "🥚", "Egg ESP V2 — Workspace", "Scans Workspace for 'egg' objects with names")
+addToggle(eggV2Card, function(on)
+    if on then enableEggESPV2() else disableEggESPV2() end
+end)
+
+-- === Visual Tab: 5 новых шейдеров ===
+local visualTab = tabFrames["Visual"]
+
+createSectionHeader(visualTab, "New Shader Presets", "🎬", 30)
+
+for idx, preset in ipairs(newShaderPresets) do
+    local sCard = createCard(visualTab, 30 + idx)
+    sCard.Size = UDim2.new(1, 0, 0, 55)
+
+    -- Иконка с цветом
+    local sIcon = Instance.new("TextLabel")
+    sIcon.Size = UDim2.new(0, 36, 0, 36)
+    sIcon.Position = UDim2.new(0, 10, 0.5, -18)
+    sIcon.BackgroundColor3 = preset.Color
+    sIcon.BackgroundTransparency = 0.8
+    sIcon.Text = preset.Icon
+    sIcon.TextSize = 18
+    sIcon.Font = Enum.Font.SourceSans
+    sIcon.ZIndex = 3
+    sIcon.Parent = sCard
+    Instance.new("UICorner", sIcon).CornerRadius = UDim.new(0, 8)
+
+    -- Цветовая линия слева
+    local colorLine = Instance.new("Frame")
+    colorLine.Size = UDim2.new(0, 3, 0.6, 0)
+    colorLine.Position = UDim2.new(0, 3, 0.2, 0)
+    colorLine.BackgroundColor3 = preset.Color
+    colorLine.BackgroundTransparency = 0.2
+    colorLine.BorderSizePixel = 0
+    colorLine.ZIndex = 4
+    colorLine.Parent = sCard
+    Instance.new("UICorner", colorLine).CornerRadius = UDim.new(0, 2)
+
+    -- Название
+    local sTitle = Instance.new("TextLabel")
+    sTitle.Size = UDim2.new(1, -120, 0, 16)
+    sTitle.Position = UDim2.new(0, 52, 0, 8)
+    sTitle.BackgroundTransparency = 1
+    sTitle.Text = preset.Name
+    sTitle.TextColor3 = C.TextWhite
+    sTitle.TextSize = 13
+    sTitle.Font = Enum.Font.GothamBold
+    sTitle.TextXAlignment = Enum.TextXAlignment.Left
+    sTitle.ZIndex = 3
+    sTitle.Parent = sCard
+
+    -- Описание
+    local sDesc = Instance.new("TextLabel")
+    sDesc.Size = UDim2.new(1, -120, 0, 12)
+    sDesc.Position = UDim2.new(0, 52, 0, 26)
+    sDesc.BackgroundTransparency = 1
+    sDesc.Text = preset.Desc
+    sDesc.TextColor3 = C.TextMuted
+    sDesc.TextSize = 9
+    sDesc.Font = Enum.Font.Gotham
+    sDesc.TextXAlignment = Enum.TextXAlignment.Left
+    sDesc.ZIndex = 3
+    sDesc.Parent = sCard
+
+    -- Кнопка Apply
+    local applyBtn = Instance.new("TextButton")
+    applyBtn.Size = UDim2.new(0, 55, 0, 26)
+    applyBtn.Position = UDim2.new(1, -65, 0.5, -13)
+    applyBtn.BackgroundColor3 = preset.Color
+    applyBtn.Text = "APPLY"
+    applyBtn.TextColor3 = C.BgDark
+    applyBtn.TextSize = 10
+    applyBtn.Font = Enum.Font.GothamBold
+    applyBtn.BorderSizePixel = 0
+    applyBtn.ZIndex = 4
+    applyBtn.ClipsDescendants = true
+    applyBtn.Parent = sCard
+    Instance.new("UICorner", applyBtn).CornerRadius = UDim.new(0, 6)
+
+    applyBtn.MouseButton1Click:Connect(function()
+        applyShaderPreset(preset)
+        rippleEffect(applyBtn, 27, 13)
+    end)
+
+    applyBtn.MouseEnter:Connect(function()
+        tweenProperty(applyBtn, {BackgroundTransparency = 0.15}, 0.15)
+    end)
+    applyBtn.MouseLeave:Connect(function()
+        tweenProperty(applyBtn, {BackgroundTransparency = 0}, 0.15)
+    end)
+end
+
+-- Кнопка сброса шейдеров
+local resetShaderCard = createCard(visualTab, 36)
+resetShaderCard.Size = UDim2.new(1, 0, 0, 42)
+addCardContent(resetShaderCard, "🔄", "Reset Shaders", "Remove all custom shaders")
+addButton(resetShaderCard, "RESET", C.Red, function()
+    removeShaderPresets()
+    -- Также удаляем старые пресеты v2.1
+    pcall(function()
+        for _, obj in ipairs(Lighting:GetChildren()) do
+            if obj.Name:find("WallacePreset") or obj.Name:find("WallaceShader_") then
+                obj:Destroy()
+            end
+        end
+    end)
+    updateStatus("🔄 All shaders reset!", C.Red)
+end)
+
+-- =============================================
+-- === PATCH: ДЕКОРАТИВНАЯ АНИМАЦИЯ ВКЛАДОК ===
+-- =============================================
+
+-- Пульсация золотых элементов
+spawn(function()
+    while State.ScriptActive do
+        -- Пульсация угловых точек
+        for _, child in ipairs(MainFrame:GetChildren()) do
+            if child.Name and child.Name:find("CornerDot") then
+                tweenProperty(child, {BackgroundTransparency = 0.7}, 1.5, Enum.EasingStyle.Sine)
+            end
+        end
+        task.wait(1.5)
+        for _, child in ipairs(MainFrame:GetChildren()) do
+            if child.Name and child.Name:find("CornerDot") then
+                tweenProperty(child, {BackgroundTransparency = 0.2}, 1.5, Enum.EasingStyle.Sine)
+            end
+        end
+        task.wait(1.5)
+    end
+end)
+
+-- Анимация индикатора свечения
+spawn(function()
+    while State.ScriptActive do
+        tweenProperty(indicatorGlow, {BackgroundTransparency = 0.5}, 1.2, Enum.EasingStyle.Sine)
+        task.wait(1.2)
+        tweenProperty(indicatorGlow, {BackgroundTransparency = 0.85}, 1.2, Enum.EasingStyle.Sine)
+        task.wait(1.2)
+    end
+end)
+
+-- =============================================
+-- === PATCH: ОБНОВЛЕНИЕ WATERMARK ===
+-- =============================================
+
+pcall(function()
+    local wm = ScreenGui:FindFirstChild("Watermark")
+    if wm then
+        wm.Size = UDim2.new(0, 280, 0, 24)
+        wm.Position = UDim2.new(1, -285, 0, 5)
+
+        spawn(function()
+            while State.ScriptActive do
+                local fps = math.floor(1 / RunService.RenderStepped:Wait())
+                local playerCount = #Players:GetPlayers()
+                wm.Text = "  🧀 You vs Wallace v2.2 | " .. os.date("%H:%M:%S") ..
+                           " | " .. fps .. " FPS | " .. playerCount .. " players"
+            end
+        end)
+    end
+end)
+
+-- =============================================
+-- === PATCH: УВЕДОМЛЕНИЕ О ЗАГРУЗКЕ ===
+-- =============================================
+
+task.wait(1.5)
+
+pcall(function()
+    showNotification("Patch v2.2 Loaded!", "All fixes & new features applied", "🔧", 4, C.Gold)
+end)
+
+task.wait(0.5)
+
+pcall(function()
+    showNotification("Aimbot V2", "Circle FOV + RMB to lock on target", "🎯", 4, C.Red)
+end)
+
+task.wait(0.5)
+
+pcall(function()
+    showNotification("Wallace Fix", "Only players with HP ≥ 1000 glow RED", "💀", 4, C.Red)
+end)
+
+task.wait(0.5)
+
+pcall(function()
+    showNotification("5 New Shaders", "Golden Sunset, Midnight, Toxic, Vintage, Cyber", "🎨", 4, C.Purple)
+end)
+
+-- =============================================
+-- === PATCH v2.2: ГОТОВО ===
+-- =============================================
+
+print("═══════════════════════════════════════")
+print("  🔧 PATCH v2.2 LOADED SUCCESSFULLY!")
+print("  ")
+print("  FIXES:")
+print("  ✅ Egg ESP → Workspace scan + names")
+print("  ✅ Wallace ESP → ONLY players HP≥1000")
+print("  ✅ Greeting → Right center screen")
+print("  ")
+print("  NEW FEATURES:")
+print("  ✅ Aimbot V2 (FOV circle + RMB lock)")
+print("  ✅ 5 New Shader Presets")
+print("  ✅ Detailed Changelog")
+print("  ✅ Ultra GUI detailing")
+print("  ✅ Corner decorations & micro patterns")
+print("  ✅ Animated tab indicator")
 print("═══════════════════════════════════════")

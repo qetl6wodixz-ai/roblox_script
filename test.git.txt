@@ -1,0 +1,3477 @@
+-- ╔══════════════════════════════════════════════════════════════════════════════╗
+-- ║                                                                              ║
+-- ║     ██████╗██╗  ██╗██╗██████╗ ███████╗████████╗███████╗██████╗              ║
+-- ║    ██╔════╝██║  ██║██║██╔══██╗╚══███╔╝╚══██╔══╝██╔════╝██╔══██╗             ║
+-- ║    ██║     ███████║██║██████╔╝  ███╔╝    ██║   █████╗  ██████╔╝             ║
+-- ║    ██║     ██╔══██║██║██╔═══╝  ███╔╝     ██║   ██╔══╝  ██╔══██╗             ║
+-- ║    ╚██████╗██║  ██║██║██║     ███████╗   ██║   ███████╗██║  ██║             ║
+-- ║     ╚═════╝╚═╝  ╚═╝╚═╝╚═╝     ╚══════╝   ╚═╝   ╚══════╝╚═╝  ╚═╝             ║
+-- ║                                                                              ║
+-- ║                    ULTRA PREMIUM LOADER v3.0                                 ║
+-- ║                    Created with Advanced Effects                             ║
+-- ║                                                                              ║
+-- ╚══════════════════════════════════════════════════════════════════════════════╝
+
+-- ============================================================================
+-- СЕКЦИЯ 1: ИНИЦИАЛИЗАЦИЯ СЕРВИСОВ И КОНФИГУРАЦИЯ
+-- ============================================================================
+
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local UserInputService = game:GetService("UserInputService")
+local SoundService = game:GetService("SoundService")
+local Lighting = game:GetService("Lighting")
+local StarterGui = game:GetService("StarterGui")
+local CoreGui = game:GetService("CoreGui")
+local ContentProvider = game:GetService("ContentProvider")
+
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local camera = workspace.CurrentCamera
+
+-- ============================================================================
+-- СЕКЦИЯ 2: КОНФИГУРАЦИЯ ТЕМЫ И ЦВЕТОВ
+-- ============================================================================
+
+local Config = {
+    -- Основные цвета
+    Theme = {
+        Primary = Color3.fromRGB(130, 80, 255),
+        PrimaryDark = Color3.fromRGB(80, 40, 200),
+        PrimaryLight = Color3.fromRGB(180, 140, 255),
+        Secondary = Color3.fromRGB(60, 180, 255),
+        SecondaryDark = Color3.fromRGB(30, 120, 200),
+        Accent = Color3.fromRGB(255, 100, 200),
+        AccentGlow = Color3.fromRGB(255, 150, 220),
+        Success = Color3.fromRGB(50, 220, 120),
+        SuccessGlow = Color3.fromRGB(80, 255, 150),
+        Warning = Color3.fromRGB(255, 200, 50),
+        Error = Color3.fromRGB(255, 60, 80),
+        
+        -- Фоновые цвета
+        Background = Color3.fromRGB(8, 8, 18),
+        BackgroundSecondary = Color3.fromRGB(12, 12, 25),
+        BackgroundTertiary = Color3.fromRGB(18, 18, 35),
+        Surface = Color3.fromRGB(22, 22, 42),
+        SurfaceLight = Color3.fromRGB(30, 28, 55),
+        
+        -- Текстовые цвета
+        TextPrimary = Color3.fromRGB(255, 255, 255),
+        TextSecondary = Color3.fromRGB(180, 175, 210),
+        TextMuted = Color3.fromRGB(120, 115, 155),
+        TextDim = Color3.fromRGB(80, 75, 110),
+        
+        -- Специальные цвета
+        Neon = Color3.fromRGB(0, 255, 200),
+        NeonPink = Color3.fromRGB(255, 0, 180),
+        NeonBlue = Color3.fromRGB(0, 150, 255),
+        Gold = Color3.fromRGB(255, 215, 0),
+        Cyber = Color3.fromRGB(0, 255, 255),
+    },
+    
+    -- Настройки анимации
+    Animation = {
+        IntroSpeed = 0.8,
+        FadeSpeed = 0.5,
+        ParticleSpeed = 2.5,
+        GlitchInterval = 3,
+        PulseSpeed = 2,
+        WaveSpeed = 1.5,
+        RotationSpeed = 1,
+        ShimmerSpeed = 2,
+    },
+    
+    -- Настройки частиц
+    Particles = {
+        MaxCount = 60,
+        SpawnRate = 0.15,
+        MinSize = 2,
+        MaxSize = 6,
+        MinSpeed = 1.5,
+        MaxSpeed = 4,
+        Colors = {
+            Color3.fromRGB(130, 80, 255),
+            Color3.fromRGB(80, 40, 200),
+            Color3.fromRGB(60, 180, 255),
+            Color3.fromRGB(255, 100, 200),
+            Color3.fromRGB(0, 255, 200),
+            Color3.fromRGB(100, 150, 255),
+            Color3.fromRGB(200, 100, 255),
+        }
+    },
+    
+    -- Настройки матрицы
+    Matrix = {
+        Enabled = true,
+        Columns = 30,
+        Speed = 0.05,
+        Characters = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEF",
+        Color = Color3.fromRGB(0, 255, 100),
+        FadeColor = Color3.fromRGB(0, 80, 30),
+    },
+    
+    -- Настройки звездного поля
+    StarField = {
+        Enabled = true,
+        StarCount = 80,
+        MinSize = 1,
+        MaxSize = 3,
+        TwinkleSpeed = 2,
+    },
+    
+    -- Размеры GUI
+    GUI = {
+        MainWidth = 480,
+        MainHeight = 360,
+        CornerRadius = 18,
+        StrokeThickness = 2,
+    },
+    
+    -- Этапы загрузки
+    LoadingStages = {
+        {text = "🔍 Scanning environment...", percent = 5, delay = 0.4},
+        {text = "🛡️ Verifying integrity...", percent = 10, delay = 0.3},
+        {text = "🔐 Establishing secure connection...", percent = 15, delay = 0.5},
+        {text = "📡 Connecting to Chipzter Cloud...", percent = 22, delay = 0.6},
+        {text = "🔑 Authenticating credentials...", percent = 28, delay = 0.4},
+        {text = "✅ Authentication successful!", percent = 32, delay = 0.3},
+        {text = "📦 Downloading core modules...", percent = 38, delay = 0.7},
+        {text = "📦 Downloading UI framework...", percent = 45, delay = 0.5},
+        {text = "📦 Downloading script engine...", percent = 52, delay = 0.6},
+        {text = "⚙️ Initializing VM...", percent = 58, delay = 0.4},
+        {text = "⚙️ Compiling bytecode...", percent = 63, delay = 0.5},
+        {text = "🧩 Loading plugin system...", percent = 68, delay = 0.3},
+        {text = "🧩 Registering callbacks...", percent = 72, delay = 0.3},
+        {text = "🎨 Building interface...", percent = 76, delay = 0.4},
+        {text = "🎨 Applying theme: Nebula Dark...", percent = 80, delay = 0.4},
+        {text = "🎨 Rendering components...", percent = 84, delay = 0.3},
+        {text = "🔧 Configuring hotkeys...", percent = 87, delay = 0.3},
+        {text = "🔧 Setting up event handlers...", percent = 90, delay = 0.3},
+        {text = "📊 Loading saved settings...", percent = 93, delay = 0.3},
+        {text = "🚀 Optimizing performance...", percent = 96, delay = 0.3},
+        {text = "✨ Almost ready...", percent = 98, delay = 0.4},
+        {text = "🎉 Launch sequence initiated!", percent = 100, delay = 0.5},
+    },
+}
+
+-- ============================================================================
+-- СЕКЦИЯ 3: УТИЛИТЫ И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+-- ============================================================================
+
+local Utility = {}
+
+-- Хранение соединений для очистки
+local connections = {}
+local allTweens = {}
+local allElements = {}
+
+function Utility.addConnection(conn)
+    table.insert(connections, conn)
+    return conn
+end
+
+function Utility.disconnectAll()
+    for _, conn in ipairs(connections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    connections = {}
+end
+
+function Utility.lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+function Utility.lerpColor(c1, c2, t)
+    return Color3.new(
+        Utility.lerp(c1.R, c2.R, t),
+        Utility.lerp(c1.G, c2.G, t),
+        Utility.lerp(c1.B, c2.B, t)
+    )
+end
+
+function Utility.clamp(value, min, max)
+    return math.max(min, math.min(max, value))
+end
+
+function Utility.map(value, inMin, inMax, outMin, outMax)
+    return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin)
+end
+
+function Utility.smoothStep(edge0, edge1, x)
+    local t = Utility.clamp((x - edge0) / (edge1 - edge0), 0, 1)
+    return t * t * (3 - 2 * t)
+end
+
+function Utility.easeOutElastic(x)
+    local c4 = (2 * math.pi) / 3
+    if x == 0 then return 0 end
+    if x == 1 then return 1 end
+    return math.pow(2, -10 * x) * math.sin((x * 10 - 0.75) * c4) + 1
+end
+
+function Utility.easeOutBounce(x)
+    local n1 = 7.5625
+    local d1 = 2.75
+    if x < 1 / d1 then
+        return n1 * x * x
+    elseif x < 2 / d1 then
+        x = x - 1.5 / d1
+        return n1 * x * x + 0.75
+    elseif x < 2.5 / d1 then
+        x = x - 2.25 / d1
+        return n1 * x * x + 0.9375
+    else
+        x = x - 2.625 / d1
+        return n1 * x * x + 0.984375
+    end
+end
+
+function Utility.randomFromArray(arr)
+    return arr[math.random(1, #arr)]
+end
+
+function Utility.formatNumber(n)
+    local formatted = tostring(n)
+    while true do
+        local k
+        formatted, k = string.gsub(formatted, "^(-?%d+)(%d%d%d)", '%1,%2')
+        if k == 0 then break end
+    end
+    return formatted
+end
+
+function Utility.getTimestamp()
+    return os.date("%H:%M:%S")
+end
+
+function Utility.getDate()
+    return os.date("%Y-%m-%d")
+end
+
+function Utility.generateSessionID()
+    local chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    local id = ""
+    for i = 1, 16 do
+        local idx = math.random(1, #chars)
+        id = id .. chars:sub(idx, idx)
+        if i == 4 or i == 8 or i == 12 then
+            id = id .. "-"
+        end
+    end
+    return id
+end
+
+function Utility.hexToColor(hex)
+    hex = hex:gsub("#", "")
+    return Color3.fromRGB(
+        tonumber(hex:sub(1, 2), 16),
+        tonumber(hex:sub(3, 4), 16),
+        tonumber(hex:sub(5, 6), 16)
+    )
+end
+
+function Utility.colorToHex(color)
+    return string.format("#%02X%02X%02X",
+        math.floor(color.R * 255),
+        math.floor(color.G * 255),
+        math.floor(color.B * 255)
+    )
+end
+
+function Utility.getDeviceInfo()
+    local platform = "Desktop"
+    if UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled then
+        platform = "Mobile"
+    elseif UserInputService.GamepadEnabled then
+        platform = "Console"
+    end
+    return platform
+end
+
+function Utility.getScreenSize()
+    return camera.ViewportSize
+end
+
+function Utility.hsvToColor(h, s, v)
+    return Color3.fromHSV(h % 1, s, v)
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 4: КЛАСС СОЗДАНИЯ ЭЛЕМЕНТОВ (UI FACTORY)
+-- ============================================================================
+
+local UIFactory = {}
+
+function UIFactory.createFrame(props)
+    local frame = Instance.new("Frame")
+    frame.Name = props.Name or "Frame"
+    frame.Size = props.Size or UDim2.new(0, 100, 0, 100)
+    frame.Position = props.Position or UDim2.new(0, 0, 0, 0)
+    frame.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+    frame.BackgroundColor3 = props.BackgroundColor3 or Config.Theme.Background
+    frame.BackgroundTransparency = props.BackgroundTransparency or 0
+    frame.BorderSizePixel = props.BorderSizePixel or 0
+    frame.ClipsDescendants = props.ClipsDescendants or false
+    frame.Visible = props.Visible ~= false
+    frame.ZIndex = props.ZIndex or 1
+    
+    if props.Parent then
+        frame.Parent = props.Parent
+    end
+    
+    if props.CornerRadius then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, props.CornerRadius)
+        corner.Parent = frame
+    end
+    
+    if props.StrokeColor then
+        local stroke = Instance.new("UIStroke")
+        stroke.Color = props.StrokeColor
+        stroke.Thickness = props.StrokeThickness or 1
+        stroke.Transparency = props.StrokeTransparency or 0
+        stroke.Parent = frame
+    end
+    
+    if props.Gradient then
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = props.Gradient.Color or ColorSequence.new(Color3.new(1,1,1))
+        gradient.Rotation = props.Gradient.Rotation or 0
+        gradient.Transparency = props.Gradient.Transparency or NumberSequence.new(0)
+        gradient.Parent = frame
+    end
+    
+    table.insert(allElements, frame)
+    return frame
+end
+
+function UIFactory.createText(props)
+    local label = Instance.new("TextLabel")
+    label.Name = props.Name or "TextLabel"
+    label.Size = props.Size or UDim2.new(1, 0, 1, 0)
+    label.Position = props.Position or UDim2.new(0, 0, 0, 0)
+    label.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = props.Text or ""
+    label.TextSize = props.TextSize or 14
+    label.TextColor3 = props.TextColor3 or Config.Theme.TextPrimary
+    label.TextTransparency = props.TextTransparency or 0
+    label.Font = props.Font or Enum.Font.Gotham
+    label.TextXAlignment = props.TextXAlignment or Enum.TextXAlignment.Center
+    label.TextYAlignment = props.TextYAlignment or Enum.TextYAlignment.Center
+    label.TextWrapped = props.TextWrapped or false
+    label.RichText = props.RichText or false
+    label.ZIndex = props.ZIndex or 1
+    
+    if props.Parent then
+        label.Parent = props.Parent
+    end
+    
+    if props.Gradient then
+        local gradient = Instance.new("UIGradient")
+        gradient.Color = props.Gradient.Color or ColorSequence.new(Color3.new(1,1,1))
+        gradient.Rotation = props.Gradient.Rotation or 0
+        gradient.Parent = label
+    end
+    
+    table.insert(allElements, label)
+    return label
+end
+
+function UIFactory.createImage(props)
+    local image = Instance.new("ImageLabel")
+    image.Name = props.Name or "ImageLabel"
+    image.Size = props.Size or UDim2.new(0, 50, 0, 50)
+    image.Position = props.Position or UDim2.new(0, 0, 0, 0)
+    image.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+    image.BackgroundTransparency = 1
+    image.Image = props.Image or ""
+    image.ImageColor3 = props.ImageColor3 or Color3.new(1, 1, 1)
+    image.ImageTransparency = props.ImageTransparency or 0
+    image.ScaleType = props.ScaleType or Enum.ScaleType.Stretch
+    image.ZIndex = props.ZIndex or 1
+    
+    if props.Parent then
+        image.Parent = props.Parent
+    end
+    
+    if props.CornerRadius then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, props.CornerRadius)
+        corner.Parent = image
+    end
+    
+    table.insert(allElements, image)
+    return image
+end
+
+function UIFactory.createButton(props)
+    local button = Instance.new("TextButton")
+    button.Name = props.Name or "Button"
+    button.Size = props.Size or UDim2.new(0, 100, 0, 30)
+    button.Position = props.Position or UDim2.new(0, 0, 0, 0)
+    button.AnchorPoint = props.AnchorPoint or Vector2.new(0, 0)
+    button.BackgroundColor3 = props.BackgroundColor3 or Config.Theme.Primary
+    button.BackgroundTransparency = props.BackgroundTransparency or 0
+    button.BorderSizePixel = 0
+    button.Text = props.Text or "Button"
+    button.TextSize = props.TextSize or 14
+    button.TextColor3 = props.TextColor3 or Config.Theme.TextPrimary
+    button.Font = props.Font or Enum.Font.GothamBold
+    button.AutoButtonColor = false
+    button.ZIndex = props.ZIndex or 1
+    
+    if props.Parent then
+        button.Parent = props.Parent
+    end
+    
+    if props.CornerRadius then
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, props.CornerRadius)
+        corner.Parent = button
+    end
+    
+    table.insert(allElements, button)
+    return button
+end
+
+function UIFactory.createScrollFrame(props)
+    local scroll = Instance.new("ScrollingFrame")
+    scroll.Name = props.Name or "ScrollFrame"
+    scroll.Size = props.Size or UDim2.new(1, 0, 1, 0)
+    scroll.Position = props.Position or UDim2.new(0, 0, 0, 0)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = props.ScrollBarThickness or 3
+    scroll.ScrollBarImageColor3 = props.ScrollBarColor or Config.Theme.Primary
+    scroll.CanvasSize = props.CanvasSize or UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = props.AutomaticCanvasSize or Enum.AutomaticSize.Y
+    scroll.ZIndex = props.ZIndex or 1
+    
+    if props.Parent then
+        scroll.Parent = props.Parent
+    end
+    
+    table.insert(allElements, scroll)
+    return scroll
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 5: СИСТЕМА АНИМАЦИЙ (ANIMATION ENGINE)
+-- ============================================================================
+
+local AnimationEngine = {}
+
+function AnimationEngine.tween(object, props, duration, style, direction, callback)
+    style = style or Enum.EasingStyle.Quint
+    direction = direction or Enum.EasingDirection.Out
+    
+    local tweenInfo = TweenInfo.new(duration, style, direction)
+    local tween = TweenService:Create(object, tweenInfo, props)
+    
+    if callback then
+        tween.Completed:Connect(callback)
+    end
+    
+    tween:Play()
+    table.insert(allTweens, tween)
+    return tween
+end
+
+function AnimationEngine.tweenSequence(object, sequence)
+    task.spawn(function()
+        for _, step in ipairs(sequence) do
+            if step.delay then
+                task.wait(step.delay)
+            end
+            if step.props then
+                local tween = AnimationEngine.tween(
+                    object,
+                    step.props,
+                    step.duration or 0.5,
+                    step.style,
+                    step.direction
+                )
+                if step.wait then
+                    tween.Completed:Wait()
+                end
+            end
+        end
+    end)
+end
+
+function AnimationEngine.fadeIn(object, duration, targetTransparency)
+    duration = duration or 0.5
+    targetTransparency = targetTransparency or 0
+    
+    if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then
+        return AnimationEngine.tween(object, {TextTransparency = targetTransparency}, duration)
+    elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
+        return AnimationEngine.tween(object, {ImageTransparency = targetTransparency}, duration)
+    else
+        return AnimationEngine.tween(object, {BackgroundTransparency = targetTransparency}, duration)
+    end
+end
+
+function AnimationEngine.fadeOut(object, duration)
+    duration = duration or 0.5
+    
+    if object:IsA("TextLabel") or object:IsA("TextButton") or object:IsA("TextBox") then
+        return AnimationEngine.tween(object, {TextTransparency = 1}, duration)
+    elseif object:IsA("ImageLabel") or object:IsA("ImageButton") then
+        return AnimationEngine.tween(object, {ImageTransparency = 1}, duration)
+    else
+        return AnimationEngine.tween(object, {BackgroundTransparency = 1}, duration)
+    end
+end
+
+function AnimationEngine.slideIn(object, from, duration)
+    duration = duration or 0.6
+    local targetPos = object.Position
+    
+    if from == "left" then
+        object.Position = UDim2.new(targetPos.X.Scale - 0.3, targetPos.X.Offset, targetPos.Y.Scale, targetPos.Y.Offset)
+    elseif from == "right" then
+        object.Position = UDim2.new(targetPos.X.Scale + 0.3, targetPos.X.Offset, targetPos.Y.Scale, targetPos.Y.Offset)
+    elseif from == "top" then
+        object.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset, targetPos.Y.Scale - 0.3, targetPos.Y.Offset)
+    elseif from == "bottom" then
+        object.Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset, targetPos.Y.Scale + 0.3, targetPos.Y.Offset)
+    end
+    
+    return AnimationEngine.tween(object, {Position = targetPos}, duration, Enum.EasingStyle.Back)
+end
+
+function AnimationEngine.scaleIn(object, duration)
+    duration = duration or 0.5
+    local targetSize = object.Size
+    object.Size = UDim2.new(0, 0, 0, 0)
+    return AnimationEngine.tween(object, {Size = targetSize}, duration, Enum.EasingStyle.Back)
+end
+
+function AnimationEngine.pulse(object, property, minVal, maxVal, duration)
+    duration = duration or 1
+    local props1 = {}
+    local props2 = {}
+    props1[property] = maxVal
+    props2[property] = minVal
+    
+    task.spawn(function()
+        while object and object.Parent do
+            AnimationEngine.tween(object, props1, duration / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut).Completed:Wait()
+            if not object or not object.Parent then break end
+            AnimationEngine.tween(object, props2, duration / 2, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut).Completed:Wait()
+        end
+    end)
+end
+
+function AnimationEngine.typeWriter(label, text, speed, callback)
+    speed = speed or 0.03
+    label.Text = ""
+    
+    task.spawn(function()
+        for i = 1, #text do
+            if not label or not label.Parent then break end
+            label.Text = text:sub(1, i)
+            task.wait(speed)
+        end
+        if callback then callback() end
+    end)
+end
+
+function AnimationEngine.glitchText(label, originalText, duration, intensity)
+    duration = duration or 0.5
+    intensity = intensity or 0.5
+    
+    local chars = "!@#$%^&*()_+-=[]{}|;':\",./<>?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+    
+    task.spawn(function()
+        local startTime = tick()
+        while tick() - startTime < duration do
+            if not label or not label.Parent then break end
+            local glitched = ""
+            for i = 1, #originalText do
+                if math.random() < intensity then
+                    local idx = math.random(1, #chars)
+                    glitched = glitched .. chars:sub(idx, idx)
+                else
+                    glitched = glitched .. originalText:sub(i, i)
+                end
+            end
+            label.Text = glitched
+            task.wait(0.03)
+        end
+        if label and label.Parent then
+            label.Text = originalText
+        end
+    end)
+end
+
+function AnimationEngine.shake(object, intensity, duration)
+    intensity = intensity or 5
+    duration = duration or 0.3
+    
+    local originalPos = object.Position
+    
+    task.spawn(function()
+        local startTime = tick()
+        while tick() - startTime < duration do
+            if not object or not object.Parent then break end
+            local offsetX = (math.random() - 0.5) * 2 * intensity
+            local offsetY = (math.random() - 0.5) * 2 * intensity
+            object.Position = UDim2.new(
+                originalPos.X.Scale, originalPos.X.Offset + offsetX,
+                originalPos.Y.Scale, originalPos.Y.Offset + offsetY
+            )
+            task.wait(0.02)
+        end
+        if object and object.Parent then
+            AnimationEngine.tween(object, {Position = originalPos}, 0.1)
+        end
+    end)
+end
+
+function AnimationEngine.ripple(parent, position, color, duration)
+    color = color or Config.Theme.Primary
+    duration = duration or 0.8
+    
+    local ripple = Instance.new("Frame")
+    ripple.Size = UDim2.new(0, 0, 0, 0)
+    ripple.Position = UDim2.new(0, position.X, 0, position.Y)
+    ripple.AnchorPoint = Vector2.new(0.5, 0.5)
+    ripple.BackgroundColor3 = color
+    ripple.BackgroundTransparency = 0.5
+    ripple.BorderSizePixel = 0
+    ripple.ZIndex = 100
+    ripple.Parent = parent
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(1, 0)
+    corner.Parent = ripple
+    
+    local maxSize = math.max(parent.AbsoluteSize.X, parent.AbsoluteSize.Y) * 2.5
+    
+    AnimationEngine.tween(ripple, {
+        Size = UDim2.new(0, maxSize, 0, maxSize),
+        BackgroundTransparency = 1
+    }, duration, Enum.EasingStyle.Quart)
+    
+    task.delay(duration, function()
+        ripple:Destroy()
+    end)
+end
+
+function AnimationEngine.float(object, amplitude, speed)
+    amplitude = amplitude or 5
+    speed = speed or 2
+    
+    local originalPos = object.Position
+    local startOffset = math.random() * math.pi * 2
+    
+    local conn = RunService.RenderStepped:Connect(function()
+        if not object or not object.Parent then return end
+        local offset = math.sin(tick() * speed + startOffset) * amplitude
+        object.Position = UDim2.new(
+            originalPos.X.Scale, originalPos.X.Offset,
+            originalPos.Y.Scale, originalPos.Y.Offset + offset
+        )
+    end)
+    
+    Utility.addConnection(conn)
+    return conn
+end
+
+function AnimationEngine.breathe(object, minTransparency, maxTransparency, speed)
+    minTransparency = minTransparency or 0.3
+    maxTransparency = maxTransparency or 0.8
+    speed = speed or 2
+    
+    local conn = RunService.RenderStepped:Connect(function()
+        if not object or not object.Parent then return end
+        local t = (math.sin(tick() * speed) + 1) / 2
+        object.BackgroundTransparency = Utility.lerp(minTransparency, maxTransparency, t)
+    end)
+    
+    Utility.addConnection(conn)
+    return conn
+end
+
+function AnimationEngine.colorCycle(object, property, colors, speed)
+    speed = speed or 1
+    
+    local conn = RunService.RenderStepped:Connect(function()
+        if not object or not object.Parent then return end
+        local t = (tick() * speed) % #colors
+        local idx = math.floor(t) + 1
+        local nextIdx = (idx % #colors) + 1
+        local frac = t - math.floor(t)
+        object[property] = Utility.lerpColor(colors[idx], colors[nextIdx], frac)
+    end)
+    
+    Utility.addConnection(conn)
+    return conn
+end
+
+function AnimationEngine.rainbowCycle(object, property, speed, saturation, value)
+    speed = speed or 0.5
+    saturation = saturation or 0.7
+    value = value or 1
+    
+    local conn = RunService.RenderStepped:Connect(function()
+        if not object or not object.Parent then return end
+        local hue = (tick() * speed) % 1
+        object[property] = Color3.fromHSV(hue, saturation, value)
+    end)
+    
+    Utility.addConnection(conn)
+    return conn
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 6: СИСТЕМА ЧАСТИЦ (PARTICLE SYSTEM)
+-- ============================================================================
+
+local ParticleSystem = {}
+ParticleSystem.particles = {}
+ParticleSystem.container = nil
+ParticleSystem.active = false
+
+function ParticleSystem.init(parent)
+    ParticleSystem.container = UIFactory.createFrame({
+        Name = "ParticleContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 2,
+        Parent = parent
+    })
+    ParticleSystem.active = true
+end
+
+function ParticleSystem.createParticle(particleType)
+    if not ParticleSystem.active or not ParticleSystem.container then return end
+    if #ParticleSystem.particles >= Config.Particles.MaxCount then return end
+    
+    particleType = particleType or "default"
+    
+    local size = math.random(Config.Particles.MinSize, Config.Particles.MaxSize)
+    local color = Utility.randomFromArray(Config.Particles.Colors)
+    local speed = Utility.lerp(Config.Particles.MinSpeed, Config.Particles.MaxSpeed, math.random())
+    
+    local particle
+    
+    if particleType == "default" then
+        particle = UIFactory.createFrame({
+            Name = "Particle",
+            Size = UDim2.new(0, size, 0, size),
+            Position = UDim2.new(math.random() * 0.95 + 0.025, 0, 1.05, 0),
+            BackgroundColor3 = color,
+            BackgroundTransparency = math.random() * 0.4 + 0.2,
+            CornerRadius = size,
+            ZIndex = 2,
+            Parent = ParticleSystem.container
+        })
+    elseif particleType == "star" then
+        particle = UIFactory.createText({
+            Name = "StarParticle",
+            Size = UDim2.new(0, size * 4, 0, size * 4),
+            Position = UDim2.new(math.random() * 0.95 + 0.025, 0, 1.05, 0),
+            Text = "✦",
+            TextSize = size * 3,
+            TextColor3 = color,
+            TextTransparency = math.random() * 0.3 + 0.1,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 2,
+            Parent = ParticleSystem.container
+        })
+    elseif particleType == "diamond" then
+        particle = UIFactory.createText({
+            Name = "DiamondParticle",
+            Size = UDim2.new(0, size * 3, 0, size * 3),
+            Position = UDim2.new(math.random() * 0.95 + 0.025, 0, 1.05, 0),
+            Text = "◆",
+            TextSize = size * 2.5,
+            TextColor3 = color,
+            TextTransparency = math.random() * 0.3 + 0.2,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 2,
+            Parent = ParticleSystem.container
+        })
+    elseif particleType == "spark" then
+        particle = UIFactory.createFrame({
+            Name = "SparkParticle",
+            Size = UDim2.new(0, size * 0.5, 0, size * 3),
+            Position = UDim2.new(math.random() * 0.95 + 0.025, 0, 1.05, 0),
+            BackgroundColor3 = color,
+            BackgroundTransparency = math.random() * 0.3 + 0.1,
+            CornerRadius = 2,
+            ZIndex = 2,
+            Parent = ParticleSystem.container
+        })
+    elseif particleType == "hex" then
+        particle = UIFactory.createText({
+            Name = "HexParticle",
+            Size = UDim2.new(0, size * 5, 0, size * 3),
+            Position = UDim2.new(math.random() * 0.95 + 0.025, 0, 1.05, 0),
+            Text = string.format("%02X", math.random(0, 255)),
+            TextSize = size * 2,
+            TextColor3 = Config.Theme.Neon,
+            TextTransparency = math.random() * 0.4 + 0.4,
+            Font = Enum.Font.Code,
+            ZIndex = 2,
+            Parent = ParticleSystem.container
+        })
+    end
+    
+    if not particle then return end
+    
+    local duration = speed + math.random() * 2
+    local horizontalDrift = (math.random() - 0.5) * 0.2
+    local rotation = math.random(-180, 180)
+    
+    local targetProps = {
+        Position = UDim2.new(
+            particle.Position.X.Scale + horizontalDrift, 0,
+            -0.1, 0
+        ),
+    }
+    
+    if particle:IsA("Frame") then
+        targetProps.BackgroundTransparency = 1
+        targetProps.Size = UDim2.new(0, size * 0.3, 0, size * 0.3)
+        targetProps.Rotation = rotation
+    else
+        targetProps.TextTransparency = 1
+        targetProps.Rotation = rotation
+    end
+    
+    local tween = AnimationEngine.tween(particle, targetProps, duration, Enum.EasingStyle.Linear)
+    
+    local particleData = {
+        instance = particle,
+        tween = tween,
+        createdAt = tick()
+    }
+    
+    table.insert(ParticleSystem.particles, particleData)
+    
+    tween.Completed:Connect(function()
+        particle:Destroy()
+        for i, p in ipairs(ParticleSystem.particles) do
+            if p.instance == particle then
+                table.remove(ParticleSystem.particles, i)
+                break
+            end
+        end
+    end)
+end
+
+function ParticleSystem.burst(count, particleType, delay)
+    count = count or 20
+    delay = delay or 0.02
+    
+    task.spawn(function()
+        for i = 1, count do
+            ParticleSystem.createParticle(particleType or "default")
+            task.wait(delay)
+        end
+    end)
+end
+
+function ParticleSystem.stop()
+    ParticleSystem.active = false
+    for _, p in ipairs(ParticleSystem.particles) do
+        pcall(function()
+            p.tween:Cancel()
+            p.instance:Destroy()
+        end)
+    end
+    ParticleSystem.particles = {}
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 7: СИСТЕМА ЗВЁЗДНОГО ПОЛЯ (STAR FIELD)
+-- ============================================================================
+
+local StarField = {}
+StarField.stars = {}
+StarField.container = nil
+
+function StarField.init(parent)
+    StarField.container = UIFactory.createFrame({
+        Name = "StarFieldContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 1,
+        Parent = parent
+    })
+    
+    for i = 1, Config.StarField.StarCount do
+        local starSize = math.random(Config.StarField.MinSize, Config.StarField.MaxSize)
+        local star = UIFactory.createFrame({
+            Name = "Star_" .. i,
+            Size = UDim2.new(0, starSize, 0, starSize),
+            Position = UDim2.new(math.random() * 0.98 + 0.01, 0, math.random() * 0.98 + 0.01, 0),
+            BackgroundColor3 = Color3.fromRGB(
+                math.random(180, 255),
+                math.random(180, 255),
+                math.random(200, 255)
+            ),
+            BackgroundTransparency = math.random() * 0.5 + 0.3,
+            CornerRadius = starSize,
+            ZIndex = 1,
+            Parent = StarField.container
+        })
+        
+        local starData = {
+            instance = star,
+            baseTransparency = star.BackgroundTransparency,
+            twinkleOffset = math.random() * math.pi * 2,
+            twinkleSpeed = Config.StarField.TwinkleSpeed * (0.5 + math.random()),
+        }
+        
+        table.insert(StarField.stars, starData)
+    end
+    
+    -- Анимация мерцания
+    local conn = RunService.RenderStepped:Connect(function()
+        if not StarField.container or not StarField.container.Parent then return end
+        
+        for _, starData in ipairs(StarField.stars) do
+            if starData.instance and starData.instance.Parent then
+                local twinkle = (math.sin(tick() * starData.twinkleSpeed + starData.twinkleOffset) + 1) / 2
+                starData.instance.BackgroundTransparency = Utility.lerp(
+                    starData.baseTransparency - 0.2,
+                    starData.baseTransparency + 0.3,
+                    twinkle
+                )
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+end
+
+function StarField.shootingStar()
+    if not StarField.container then return end
+    
+    local startX = math.random() * 0.3
+    local startY = math.random() * 0.3
+    
+    local trail = UIFactory.createFrame({
+        Name = "ShootingStar",
+        Size = UDim2.new(0, 40, 0, 2),
+        Position = UDim2.new(startX, 0, startY, 0),
+        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+        BackgroundTransparency = 0.2,
+        CornerRadius = 2,
+        ZIndex = 3,
+        Parent = StarField.container
+    })
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.3, 0),
+        NumberSequenceKeypoint.new(1, 0),
+    })
+    gradient.Rotation = 0
+    gradient.Parent = trail
+    
+    trail.Rotation = 35
+    
+    AnimationEngine.tween(trail, {
+        Position = UDim2.new(startX + 0.7, 0, startY + 0.5, 0),
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, 80, 0, 1),
+    }, 0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+    
+    task.delay(0.9, function()
+        trail:Destroy()
+    end)
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 8: МАТРИЧНЫЙ ДОЖДЬ (MATRIX RAIN)
+-- ============================================================================
+
+local MatrixRain = {}
+MatrixRain.columns = {}
+MatrixRain.container = nil
+MatrixRain.active = false
+
+function MatrixRain.init(parent)
+    MatrixRain.container = UIFactory.createFrame({
+        Name = "MatrixRainContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 1,
+        Parent = parent
+    })
+    
+    MatrixRain.active = true
+    
+    local columnWidth = math.floor(parent.AbsoluteSize.X / Config.Matrix.Columns)
+    if columnWidth < 8 then columnWidth = 8 end
+    
+    for i = 1, Config.Matrix.Columns do
+        local column = {
+            x = (i - 1) / Config.Matrix.Columns,
+            chars = {},
+            speed = 0.5 + math.random() * 1.5,
+            length = math.random(5, 15),
+            delay = math.random() * 3,
+        }
+        
+        for j = 1, column.length do
+            local charIdx = math.random(1, #Config.Matrix.Characters)
+            local char = Config.Matrix.Characters:sub(charIdx, charIdx)
+            
+            local transparency = Utility.lerp(0.3, 0.95, j / column.length)
+            local color = Utility.lerpColor(Config.Matrix.Color, Config.Matrix.FadeColor, j / column.length)
+            
+            local label = UIFactory.createText({
+                Name = "MatrixChar_" .. i .. "_" .. j,
+                Size = UDim2.new(0, columnWidth, 0, 14),
+                Position = UDim2.new(column.x, 0, 0, -j * 14),
+                Text = char,
+                TextSize = 11,
+                TextColor3 = color,
+                TextTransparency = transparency,
+                Font = Enum.Font.Code,
+                ZIndex = 1,
+                Parent = MatrixRain.container
+            })
+            
+            table.insert(column.chars, {
+                label = label,
+                baseY = -j * 14,
+                transparency = transparency,
+            })
+        end
+        
+        table.insert(MatrixRain.columns, column)
+    end
+    
+    -- Анимация матрицы
+    local conn = RunService.RenderStepped:Connect(function()
+        if not MatrixRain.active or not MatrixRain.container or not MatrixRain.container.Parent then return end
+        
+        local t = tick()
+        
+        for _, column in ipairs(MatrixRain.columns) do
+            local progress = ((t - column.delay) * column.speed * 40) % (MatrixRain.container.AbsoluteSize.Y + column.length * 14 + 200)
+            
+            for idx, charData in ipairs(column.chars) do
+                if charData.label and charData.label.Parent then
+                    local newY = charData.baseY + progress
+                    charData.label.Position = UDim2.new(column.x, 0, 0, newY)
+                    
+                    -- Случайная смена символа
+                    if math.random() < 0.02 then
+                        local ci = math.random(1, #Config.Matrix.Characters)
+                        charData.label.Text = Config.Matrix.Characters:sub(ci, ci)
+                    end
+                end
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+end
+
+function MatrixRain.stop()
+    MatrixRain.active = false
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 9: ЭФФЕКТ СКАНЛАЙНОВ (SCANLINE EFFECT)
+-- ============================================================================
+
+local ScanlineEffect = {}
+
+function ScanlineEffect.create(parent)
+    local scanlineContainer = UIFactory.createFrame({
+        Name = "ScanlineContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 50,
+        Parent = parent
+    })
+    
+    -- Горизонтальные сканлайны (статичные)
+    for i = 0, 60 do
+        UIFactory.createFrame({
+            Name = "Scanline_" .. i,
+            Size = UDim2.new(1, 0, 0, 1),
+            Position = UDim2.new(0, 0, 0, i * 6),
+            BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+            BackgroundTransparency = 0.92,
+            ZIndex = 50,
+            Parent = scanlineContainer
+        })
+    end
+    
+    -- Движущаяся сканлайн полоса
+    local movingScanline = UIFactory.createFrame({
+        Name = "MovingScanline",
+        Size = UDim2.new(1, 0, 0, 3),
+        Position = UDim2.new(0, 0, -0.05, 0),
+        BackgroundColor3 = Config.Theme.Primary,
+        BackgroundTransparency = 0.85,
+        ZIndex = 51,
+        Parent = scanlineContainer
+    })
+    
+    local scanGradient = Instance.new("UIGradient")
+    scanGradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.4, 0),
+        NumberSequenceKeypoint.new(0.6, 0),
+        NumberSequenceKeypoint.new(1, 1),
+    })
+    scanGradient.Parent = movingScanline
+    
+    -- Анимация движения сканлайна
+    local function animateScanline()
+        while movingScanline and movingScanline.Parent do
+            movingScanline.Position = UDim2.new(0, 0, -0.05, 0)
+            AnimationEngine.tween(movingScanline, {
+                Position = UDim2.new(0, 0, 1.05, 0)
+            }, 3, Enum.EasingStyle.Linear).Completed:Wait()
+            task.wait(math.random() * 2 + 1)
+        end
+    end
+    
+    task.spawn(animateScanline)
+    
+    return scanlineContainer
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 10: КРУГОВОЙ СПИННЕР (CIRCULAR SPINNER)
+-- ============================================================================
+
+local CircularSpinner = {}
+
+function CircularSpinner.create(parent, size, position)
+    size = size or 80
+    position = position or UDim2.new(0.5, 0, 0, 40)
+    
+    local spinnerContainer = UIFactory.createFrame({
+        Name = "SpinnerContainer",
+        Size = UDim2.new(0, size, 0, size),
+        Position = position,
+        AnchorPoint = Vector2.new(0.5, 0),
+        BackgroundTransparency = 1,
+        ZIndex = 10,
+        Parent = parent
+    })
+    
+    -- Внешнее кольцо
+    local outerRing = UIFactory.createFrame({
+        Name = "OuterRing",
+        Size = UDim2.new(1, 0, 1, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        ZIndex = 10,
+        Parent = spinnerContainer,
+        StrokeColor = Config.Theme.Primary,
+        StrokeThickness = 2,
+        StrokeTransparency = 0.5,
+        CornerRadius = size,
+    })
+    
+    -- Среднее кольцо
+    local middleRing = UIFactory.createFrame({
+        Name = "MiddleRing",
+        Size = UDim2.new(0, size * 0.78, 0, size * 0.78),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        ZIndex = 11,
+        Parent = spinnerContainer,
+        StrokeColor = Config.Theme.Secondary,
+        StrokeThickness = 2,
+        StrokeTransparency = 0.6,
+        CornerRadius = size,
+    })
+    
+    -- Внутреннее кольцо
+    local innerRing = UIFactory.createFrame({
+        Name = "InnerRing",
+        Size = UDim2.new(0, size * 0.56, 0, size * 0.56),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundTransparency = 1,
+        ZIndex = 12,
+        Parent = spinnerContainer,
+        StrokeColor = Config.Theme.Accent,
+        StrokeThickness = 1.5,
+        StrokeTransparency = 0.7,
+        CornerRadius = size,
+    })
+    
+    -- Ядро
+    local core = UIFactory.createFrame({
+        Name = "Core",
+        Size = UDim2.new(0, size * 0.3, 0, size * 0.3),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        BackgroundColor3 = Config.Theme.PrimaryDark,
+        BackgroundTransparency = 0.3,
+        CornerRadius = size,
+        ZIndex = 13,
+        Parent = spinnerContainer
+    })
+    
+    -- Точки на орбите
+    local orbitDots = {}
+    local dotCount = 8
+    
+    for i = 1, dotCount do
+        local dotSize = math.random(3, 6)
+        local dot = UIFactory.createFrame({
+            Name = "OrbitDot_" .. i,
+            Size = UDim2.new(0, dotSize, 0, dotSize),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundColor3 = Utility.randomFromArray(Config.Particles.Colors),
+            BackgroundTransparency = 0.2,
+            CornerRadius = dotSize,
+            ZIndex = 14,
+            Parent = spinnerContainer
+        })
+        
+        table.insert(orbitDots, {
+            instance = dot,
+            radius = size * (0.25 + (i / dotCount) * 0.2),
+            speed = 1 + i * 0.3,
+            offset = (i / dotCount) * math.pi * 2,
+        })
+    end
+    
+    -- Вращающиеся дуги
+    local arcs = {}
+    for i = 1, 3 do
+        local arcSize = size * (0.6 + i * 0.15)
+        local arc = UIFactory.createFrame({
+            Name = "Arc_" .. i,
+            Size = UDim2.new(0, arcSize, 0, arcSize),
+            Position = UDim2.new(0.5, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0.5, 0.5),
+            BackgroundTransparency = 1,
+            CornerRadius = arcSize,
+            ZIndex = 9,
+            Parent = spinnerContainer,
+            StrokeColor = Config.Theme.Primary,
+            StrokeThickness = 1,
+            StrokeTransparency = 0.7 + i * 0.05,
+        })
+        table.insert(arcs, {instance = arc, speed = 2 + i, direction = (i % 2 == 0) and 1 or -1})
+    end
+    
+    -- Анимация спиннера
+    local conn = RunService.RenderStepped:Connect(function()
+        if not spinnerContainer or not spinnerContainer.Parent then return end
+        
+        local t = tick()
+        
+        -- Вращение колец
+        outerRing.Rotation = t * 60
+        middleRing.Rotation = -t * 90
+        innerRing.Rotation = t * 120
+        
+        -- Пульсация ядра
+        local pulse = 1 + math.sin(t * 4) * 0.15
+        core.Size = UDim2.new(0, size * 0.3 * pulse, 0, size * 0.3 * pulse)
+        core.BackgroundTransparency = 0.2 + math.sin(t * 3) * 0.15
+        
+        -- Орбитальные точки
+        for _, dotData in ipairs(orbitDots) do
+            if dotData.instance and dotData.instance.Parent then
+                local angle = t * dotData.speed + dotData.offset
+                local x = math.cos(angle) * dotData.radius
+                local y = math.sin(angle) * dotData.radius
+                dotData.instance.Position = UDim2.new(0.5, x, 0.5, y)
+                dotData.instance.BackgroundTransparency = 0.1 + math.sin(t * 3 + dotData.offset) * 0.3
+            end
+        end
+        
+        -- Вращение дуг
+        for _, arcData in ipairs(arcs) do
+            if arcData.instance and arcData.instance.Parent then
+                arcData.instance.Rotation = t * arcData.speed * 30 * arcData.direction
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return {
+        container = spinnerContainer,
+        outerRing = outerRing,
+        middleRing = middleRing,
+        innerRing = innerRing,
+        core = core,
+        orbitDots = orbitDots,
+        arcs = arcs,
+    }
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 11: ГЕОМЕТРИЧЕСКИЕ ФИГУРЫ НА ФОНЕ (GEO BACKGROUND)
+-- ============================================================================
+
+local GeoBackground = {}
+GeoBackground.shapes = {}
+
+function GeoBackground.init(parent)
+    local container = UIFactory.createFrame({
+        Name = "GeoBackgroundContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 1,
+        Parent = parent
+    })
+    
+    local shapeTypes = {"◇", "△", "○", "□", "⬡", "⬢", "◈", "✧"}
+    
+    for i = 1, 25 do
+        local shape = shapeTypes[math.random(1, #shapeTypes)]
+        local shapeSize = math.random(12, 35)
+        
+        local label = UIFactory.createText({
+            Name = "GeoShape_" .. i,
+            Size = UDim2.new(0, shapeSize * 2, 0, shapeSize * 2),
+            Position = UDim2.new(math.random() * 0.9 + 0.05, 0, math.random() * 0.9 + 0.05, 0),
+            Text = shape,
+            TextSize = shapeSize,
+            TextColor3 = Config.Theme.Primary,
+            TextTransparency = 0.85 + math.random() * 0.1,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 1,
+            Parent = container
+        })
+        
+        local shapeData = {
+            instance = label,
+            originalPos = label.Position,
+            rotSpeed = (math.random() - 0.5) * 30,
+            floatSpeed = 0.3 + math.random() * 0.5,
+            floatAmplitude = 3 + math.random() * 8,
+            driftX = (math.random() - 0.5) * 0.001,
+            offset = math.random() * math.pi * 2,
+        }
+        
+        table.insert(GeoBackground.shapes, shapeData)
+    end
+    
+    -- Анимация фигур
+    local conn = RunService.RenderStepped:Connect(function()
+        if not container or not container.Parent then return end
+        
+        local t = tick()
+        
+        for _, shapeData in ipairs(GeoBackground.shapes) do
+            if shapeData.instance and shapeData.instance.Parent then
+                -- Вращение
+                shapeData.instance.Rotation = t * shapeData.rotSpeed
+                
+                -- Плавание
+                local floatY = math.sin(t * shapeData.floatSpeed + shapeData.offset) * shapeData.floatAmplitude
+                local floatX = math.cos(t * shapeData.floatSpeed * 0.7 + shapeData.offset) * shapeData.floatAmplitude * 0.5
+                
+                shapeData.instance.Position = UDim2.new(
+                    shapeData.originalPos.X.Scale + shapeData.driftX * t,
+                    shapeData.originalPos.X.Offset + floatX,
+                    shapeData.originalPos.Y.Scale,
+                    shapeData.originalPos.Y.Offset + floatY
+                )
+                
+                -- Пульсация прозрачности
+                shapeData.instance.TextTransparency = 0.82 + math.sin(t * 1.5 + shapeData.offset) * 0.08
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return container
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 12: ВОЛНОВОЙ ЭФФЕКТ (WAVE EFFECT)
+-- ============================================================================
+
+local WaveEffect = {}
+
+function WaveEffect.createWaveBar(parent, position, height)
+    height = height or 4
+    
+    local waveContainer = UIFactory.createFrame({
+        Name = "WaveContainer",
+        Size = UDim2.new(0.8, 0, 0, height + 10),
+        Position = position or UDim2.new(0.1, 0, 0, 170),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 15,
+        Parent = parent
+    })
+    
+    local barCount = 40
+    local bars = {}
+    
+    for i = 1, barCount do
+        local bar = UIFactory.createFrame({
+            Name = "WaveBar_" .. i,
+            Size = UDim2.new(1 / barCount, -1, 0, 2),
+            Position = UDim2.new((i - 1) / barCount, 0, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Config.Theme.Primary,
+            BackgroundTransparency = 0.3,
+            CornerRadius = 2,
+            ZIndex = 15,
+            Parent = waveContainer
+        })
+        
+        local barGradient = Instance.new("UIGradient")
+        barGradient.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Config.Theme.PrimaryDark),
+            ColorSequenceKeypoint.new(0.5, Config.Theme.PrimaryLight),
+            ColorSequenceKeypoint.new(1, Config.Theme.Secondary),
+        })
+        barGradient.Parent = bar
+        
+        table.insert(bars, {
+            instance = bar,
+            index = i,
+            offset = i * 0.15,
+        })
+    end
+    
+    -- Анимация волны
+    local conn = RunService.RenderStepped:Connect(function()
+        if not waveContainer or not waveContainer.Parent then return end
+        
+        local t = tick()
+        
+        for _, barData in ipairs(bars) do
+            if barData.instance and barData.instance.Parent then
+                local wave1 = math.sin(t * 3 + barData.offset) * 0.3
+                local wave2 = math.sin(t * 5 + barData.offset * 1.5) * 0.15
+                local wave3 = math.sin(t * 7 + barData.offset * 0.8) * 0.08
+                
+                local totalWave = (wave1 + wave2 + wave3 + 0.53)
+                local barHeight = Utility.clamp(totalWave * height * 2, 1, height * 3)
+                
+                barData.instance.Size = UDim2.new(1 / barCount, -1, 0, barHeight)
+                
+                -- Цвет меняется по высоте
+                local hue = (barData.index / barCount + t * 0.1) % 1
+                barData.instance.BackgroundColor3 = Color3.fromHSV(hue * 0.3 + 0.7, 0.6, 0.9)
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return waveContainer
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 13: ГОЛОГРАФИЧЕСКИЙ ЭФФЕКТ (HOLOGRAPHIC)
+-- ============================================================================
+
+local HolographicEffect = {}
+
+function HolographicEffect.createHoloLine(parent, yPos, width)
+    local line = UIFactory.createFrame({
+        Name = "HoloLine",
+        Size = UDim2.new(width or 0.6, 0, 0, 1),
+        Position = UDim2.new((1 - (width or 0.6)) / 2, 0, 0, yPos),
+        BackgroundColor3 = Config.Theme.Cyber,
+        BackgroundTransparency = 0.7,
+        ZIndex = 5,
+        Parent = parent
+    })
+    
+    local gradient = Instance.new("UIGradient")
+    gradient.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 1),
+        NumberSequenceKeypoint.new(0.2, 0),
+        NumberSequenceKeypoint.new(0.8, 0),
+        NumberSequenceKeypoint.new(1, 1),
+    })
+    gradient.Parent = line
+    
+    AnimationEngine.breathe(line, 0.5, 0.9, 1.5 + math.random())
+    
+    return line
+end
+
+function HolographicEffect.createDataStream(parent, yPos)
+    local streamContainer = UIFactory.createFrame({
+        Name = "DataStream",
+        Size = UDim2.new(0.9, 0, 0, 12),
+        Position = UDim2.new(0.05, 0, 0, yPos),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 5,
+        Parent = parent
+    })
+    
+    local dataText = UIFactory.createText({
+        Name = "DataText",
+        Size = UDim2.new(3, 0, 1, 0),
+        Position = UDim2.new(1, 0, 0, 0),
+        Text = "",
+        TextSize = 9,
+        TextColor3 = Config.Theme.Neon,
+        TextTransparency = 0.6,
+        Font = Enum.Font.Code,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 5,
+        Parent = streamContainer
+    })
+    
+    -- Генерация случайных данных
+    local function generateData()
+        local data = ""
+        for i = 1, 80 do
+            if math.random() < 0.3 then
+                data = data .. " "
+            else
+                data = data .. string.format("%02X", math.random(0, 255))
+            end
+        end
+        return data
+    end
+    
+    -- Бегущая строка
+    task.spawn(function()
+        while dataText and dataText.Parent do
+            dataText.Text = generateData()
+            dataText.Position = UDim2.new(1, 0, 0, 0)
+            
+            AnimationEngine.tween(dataText, {
+                Position = UDim2.new(-3, 0, 0, 0)
+            }, 8 + math.random() * 4, Enum.EasingStyle.Linear).Completed:Wait()
+        end
+    end)
+    
+    return streamContainer
+end
+
+function HolographicEffect.createCornerBrackets(parent)
+    local bracketSize = 20
+    local bracketThickness = 2
+    local color = Config.Theme.Cyber
+    local transparency = 0.5
+    
+    -- Верхний левый
+    local tlH = UIFactory.createFrame({
+        Name = "TL_H",
+        Size = UDim2.new(0, bracketSize, 0, bracketThickness),
+        Position = UDim2.new(0, -1, 0, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    local tlV = UIFactory.createFrame({
+        Name = "TL_V",
+        Size = UDim2.new(0, bracketThickness, 0, bracketSize),
+        Position = UDim2.new(0, -1, 0, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    -- Верхний правый
+    local trH = UIFactory.createFrame({
+        Name = "TR_H",
+        Size = UDim2.new(0, bracketSize, 0, bracketThickness),
+        Position = UDim2.new(1, -bracketSize + 1, 0, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    local trV = UIFactory.createFrame({
+        Name = "TR_V",
+        Size = UDim2.new(0, bracketThickness, 0, bracketSize),
+        Position = UDim2.new(1, -1, 0, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    -- Нижний левый
+    local blH = UIFactory.createFrame({
+        Name = "BL_H",
+        Size = UDim2.new(0, bracketSize, 0, bracketThickness),
+        Position = UDim2.new(0, -1, 1, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    local blV = UIFactory.createFrame({
+        Name = "BL_V",
+        Size = UDim2.new(0, bracketThickness, 0, bracketSize),
+        Position = UDim2.new(0, -1, 1, -bracketSize + 1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    -- Нижний правый
+    local brH = UIFactory.createFrame({
+        Name = "BR_H",
+        Size = UDim2.new(0, bracketSize, 0, bracketThickness),
+        Position = UDim2.new(1, -bracketSize + 1, 1, -1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    local brV = UIFactory.createFrame({
+        Name = "BR_V",
+        Size = UDim2.new(0, bracketThickness, 0, bracketSize),
+        Position = UDim2.new(1, -1, 1, -bracketSize + 1),
+        BackgroundColor3 = color,
+        BackgroundTransparency = transparency,
+        ZIndex = 20,
+        Parent = parent
+    })
+    
+    local allBrackets = {tlH, tlV, trH, trV, blH, blV, brH, brV}
+    
+    -- Анимация пульсации скобок
+    local conn = RunService.RenderStepped:Connect(function()
+        local t = tick()
+        for _, bracket in ipairs(allBrackets) do
+            if bracket and bracket.Parent then
+                bracket.BackgroundTransparency = 0.4 + math.sin(t * 2) * 0.2
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return allBrackets
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 14: СИСТЕМА УВЕДОМЛЕНИЙ (NOTIFICATION SYSTEM)
+-- ============================================================================
+
+local NotificationSystem = {}
+NotificationSystem.container = nil
+NotificationSystem.notifications = {}
+NotificationSystem.yOffset = 0
+
+function NotificationSystem.init(parent)
+    NotificationSystem.container = UIFactory.createFrame({
+        Name = "NotificationContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ZIndex = 100,
+        Parent = parent
+    })
+end
+
+function NotificationSystem.push(text, notifType, duration)
+    if not NotificationSystem.container then return end
+    
+    notifType = notifType or "info"
+    duration = duration or 2
+    
+    local colors = {
+        info = Config.Theme.Secondary,
+        success = Config.Theme.Success,
+        warning = Config.Theme.Warning,
+        error = Config.Theme.Error,
+        special = Config.Theme.Gold,
+    }
+    
+    local icons = {
+        info = "ℹ️",
+        success = "✅",
+        warning = "⚠️",
+        error = "❌",
+        special = "⭐",
+    }
+    
+    local notifColor = colors[notifType] or colors.info
+    local notifIcon = icons[notifType] or icons.info
+    
+    local yPos = 10 + NotificationSystem.yOffset
+    
+    local notifFrame = UIFactory.createFrame({
+        Name = "Notification",
+        Size = UDim2.new(0, 280, 0, 35),
+        Position = UDim2.new(1, 10, 0, yPos),
+        AnchorPoint = Vector2.new(0, 0),
+        BackgroundColor3 = Config.Theme.Surface,
+        BackgroundTransparency = 0.1,
+        CornerRadius = 8,
+        ZIndex = 100,
+        Parent = NotificationSystem.container,
+        StrokeColor = notifColor,
+        StrokeThickness = 1,
+        StrokeTransparency = 0.3,
+    })
+    
+    -- Акцентная полоска слева
+    local accent = UIFactory.createFrame({
+        Name = "Accent",
+        Size = UDim2.new(0, 3, 0.7, 0),
+        Position = UDim2.new(0, 6, 0.15, 0),
+        BackgroundColor3 = notifColor,
+        CornerRadius = 2,
+        ZIndex = 101,
+        Parent = notifFrame
+    })
+    
+    -- Текст уведомления
+    local notifText = UIFactory.createText({
+        Name = "NotifText",
+        Size = UDim2.new(1, -25, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        Text = notifIcon .. "  " .. text,
+        TextSize = 11,
+        TextColor3 = Config.Theme.TextSecondary,
+        Font = Enum.Font.Gotham,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextWrapped = true,
+        ZIndex = 101,
+        Parent = notifFrame
+    })
+    
+    -- Анимация входа
+    AnimationEngine.tween(notifFrame, {
+        Position = UDim2.new(1, -290, 0, yPos)
+    }, 0.5, Enum.EasingStyle.Back)
+    
+    NotificationSystem.yOffset = NotificationSystem.yOffset + 42
+    
+    -- Анимация выхода
+    task.delay(duration, function()
+        if notifFrame and notifFrame.Parent then
+            AnimationEngine.tween(notifFrame, {
+                Position = UDim2.new(1, 10, 0, yPos),
+                BackgroundTransparency = 1
+            }, 0.4, Enum.EasingStyle.Quint)
+            
+            AnimationEngine.tween(notifText, {TextTransparency = 1}, 0.3)
+            AnimationEngine.tween(accent, {BackgroundTransparency = 1}, 0.3)
+            
+            task.delay(0.5, function()
+                notifFrame:Destroy()
+                NotificationSystem.yOffset = math.max(0, NotificationSystem.yOffset - 42)
+            end)
+        end
+    end)
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 15: КОНСОЛЬ ЛОГОВ (LOG CONSOLE)
+-- ============================================================================
+
+local LogConsole = {}
+LogConsole.container = nil
+LogConsole.logList = nil
+LogConsole.logCount = 0
+
+function LogConsole.init(parent, position, size)
+    LogConsole.container = UIFactory.createFrame({
+        Name = "LogConsole",
+        Size = size or UDim2.new(0.85, 0, 0, 70),
+        Position = position or UDim2.new(0.075, 0, 0, 238),
+        BackgroundColor3 = Color3.fromRGB(5, 5, 12),
+        BackgroundTransparency = 0.15,
+        CornerRadius = 8,
+        ClipsDescendants = true,
+        ZIndex = 15,
+        Parent = parent,
+        StrokeColor = Color3.fromRGB(35, 30, 60),
+        StrokeThickness = 1,
+        StrokeTransparency = 0.3,
+    })
+    
+    -- Заголовок консоли
+    local header = UIFactory.createFrame({
+        Name = "Header",
+        Size = UDim2.new(1, 0, 0, 18),
+        BackgroundColor3 = Color3.fromRGB(15, 12, 28),
+        BackgroundTransparency = 0.3,
+        ZIndex = 16,
+        Parent = LogConsole.container,
+    })
+    
+    local headerText = UIFactory.createText({
+        Name = "HeaderText",
+        Size = UDim2.new(1, -10, 1, 0),
+        Position = UDim2.new(0, 8, 0, 0),
+        Text = "⌘ SYSTEM LOG",
+        TextSize = 9,
+        TextColor3 = Config.Theme.TextDim,
+        Font = Enum.Font.Code,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 17,
+        Parent = header
+    })
+    
+    -- Декоративные точки в заголовке
+    local dotsContainer = UIFactory.createFrame({
+        Name = "Dots",
+        Size = UDim2.new(0, 40, 0, 10),
+        Position = UDim2.new(1, -48, 0.5, 0),
+        AnchorPoint = Vector2.new(0, 0.5),
+        BackgroundTransparency = 1,
+        ZIndex = 17,
+        Parent = header
+    })
+    
+    for i, color in ipairs({Color3.fromRGB(255, 95, 86), Color3.fromRGB(255, 189, 46), Color3.fromRGB(39, 201, 63)}) do
+        UIFactory.createFrame({
+            Name = "Dot_" .. i,
+            Size = UDim2.new(0, 7, 0, 7),
+            Position = UDim2.new(0, (i-1) * 13, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = color,
+            CornerRadius = 7,
+            ZIndex = 18,
+            Parent = dotsContainer
+        })
+    end
+    
+    -- Область логов
+    LogConsole.logList = UIFactory.createScrollFrame({
+        Name = "LogList",
+        Size = UDim2.new(1, -6, 1, -21),
+        Position = UDim2.new(0, 3, 0, 19),
+        ScrollBarThickness = 2,
+        ScrollBarColor = Config.Theme.Primary,
+        ZIndex = 16,
+        Parent = LogConsole.container,
+    })
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 1)
+    listLayout.Parent = LogConsole.logList
+    
+    return LogConsole.container
+end
+
+function LogConsole.addLog(text, logType)
+    if not LogConsole.logList then return end
+    
+    logType = logType or "info"
+    LogConsole.logCount = LogConsole.logCount + 1
+    
+    local colors = {
+        info = Config.Theme.TextDim,
+        success = Config.Theme.Success,
+        warning = Config.Theme.Warning,
+        error = Config.Theme.Error,
+        system = Config.Theme.Cyber,
+        data = Config.Theme.Neon,
+    }
+    
+    local prefixes = {
+        info = "[INFO]",
+        success = "[OK]  ",
+        warning = "[WARN]",
+        error = "[ERR] ",
+        system = "[SYS] ",
+        data = "[DATA]",
+    }
+    
+    local color = colors[logType] or colors.info
+    local prefix = prefixes[logType] or prefixes.info
+    local timestamp = Utility.getTimestamp()
+    
+    local logEntry = UIFactory.createText({
+        Name = "Log_" .. LogConsole.logCount,
+        Size = UDim2.new(1, -8, 0, 12),
+        Text = timestamp .. " " .. prefix .. " " .. text,
+        TextSize = 8,
+        TextColor3 = color,
+        TextTransparency = 1,
+        Font = Enum.Font.Code,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 17,
+        Parent = LogConsole.logList,
+    })
+    
+    logEntry.LayoutOrder = LogConsole.logCount
+    
+    -- Анимация появления
+    AnimationEngine.tween(logEntry, {TextTransparency = 0.2}, 0.3)
+    
+    -- Автоскролл
+    task.defer(function()
+        if LogConsole.logList then
+            LogConsole.logList.CanvasPosition = Vector2.new(0, LogConsole.logList.AbsoluteCanvasSize.Y)
+        end
+    end)
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 16: HEX-СЕТКА (HEXAGONAL GRID)
+-- ============================================================================
+
+local HexGrid = {}
+
+function HexGrid.create(parent)
+    local container = UIFactory.createFrame({
+        Name = "HexGridContainer",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 1,
+        Parent = parent
+    })
+    
+    local hexChars = {"⬡", "⬢"}
+    local hexElements = {}
+    
+    local cols = 12
+    local rows = 8
+    local hexSize = 16
+    
+    for row = 1, rows do
+        for col = 1, cols do
+            local xOffset = (row % 2 == 0) and (hexSize * 0.8) or 0
+            local x = (col - 1) * hexSize * 1.6 + xOffset
+            local y = (row - 1) * hexSize * 1.4
+            
+            local hex = UIFactory.createText({
+                Name = "Hex_" .. row .. "_" .. col,
+                Size = UDim2.new(0, hexSize * 2, 0, hexSize * 2),
+                Position = UDim2.new(0, x, 0, y),
+                Text = hexChars[math.random(1, 2)],
+                TextSize = hexSize,
+                TextColor3 = Config.Theme.Primary,
+                TextTransparency = 0.92 + math.random() * 0.05,
+                Font = Enum.Font.GothamBold,
+                ZIndex = 1,
+                Parent = container
+            })
+            
+            table.insert(hexElements, {
+                instance = hex,
+                row = row,
+                col = col,
+                baseTransparency = hex.TextTransparency,
+                phase = math.random() * math.pi * 2,
+            })
+        end
+    end
+    
+    -- Волновая анимация по сетке
+    local conn = RunService.RenderStepped:Connect(function()
+        if not container or not container.Parent then return end
+        
+        local t = tick()
+        
+        for _, hexData in ipairs(hexElements) do
+            if hexData.instance and hexData.instance.Parent then
+                local wave = math.sin(t * 1.5 + hexData.row * 0.5 + hexData.col * 0.3 + hexData.phase)
+                hexData.instance.TextTransparency = hexData.baseTransparency - wave * 0.05
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return container
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 17: ИНФОРМАЦИОННАЯ ПАНЕЛЬ (INFO PANEL)
+-- ============================================================================
+
+local InfoPanel = {}
+
+function InfoPanel.create(parent, position)
+    local panel = UIFactory.createFrame({
+        Name = "InfoPanel",
+        Size = UDim2.new(0.85, 0, 0, 48),
+        Position = position or UDim2.new(0.075, 0, 0, 315),
+        BackgroundColor3 = Config.Theme.Surface,
+        BackgroundTransparency = 0.4,
+        CornerRadius = 10,
+        ZIndex = 15,
+        Parent = parent,
+        StrokeColor = Config.Theme.PrimaryDark,
+        StrokeThickness = 1,
+        StrokeTransparency = 0.6,
+    })
+    
+    -- Разделитель на 3 колонки
+    local columns = {
+        {
+            icon = "👤",
+            label = "USER",
+            value = player.Name,
+            color = Config.Theme.Primary,
+        },
+        {
+            icon = "🖥️",
+            label = "DEVICE",
+            value = Utility.getDeviceInfo(),
+            color = Config.Theme.Secondary,
+        },
+        {
+            icon = "🔑",
+            label = "SESSION",
+            value = string.sub(Utility.generateSessionID(), 1, 8),
+            color = Config.Theme.Accent,
+        },
+    }
+    
+    for i, col in ipairs(columns) do
+        local colFrame = UIFactory.createFrame({
+            Name = "Column_" .. i,
+            Size = UDim2.new(1/3, -2, 1, -6),
+            Position = UDim2.new((i-1)/3, 1, 0, 3),
+            BackgroundTransparency = 1,
+            ZIndex = 16,
+            Parent = panel
+        })
+        
+        -- Иконка
+        local icon = UIFactory.createText({
+            Name = "Icon",
+            Size = UDim2.new(1, 0, 0, 14),
+            Position = UDim2.new(0, 0, 0, 2),
+            Text = col.icon,
+            TextSize = 11,
+            TextColor3 = col.color,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 17,
+            Parent = colFrame
+        })
+        
+        -- Метка
+        local label = UIFactory.createText({
+            Name = "Label",
+            Size = UDim2.new(1, 0, 0, 10),
+            Position = UDim2.new(0, 0, 0, 16),
+            Text = col.label,
+            TextSize = 7,
+            TextColor3 = Config.Theme.TextDim,
+            Font = Enum.Font.GothamBold,
+            ZIndex = 17,
+            Parent = colFrame
+        })
+        
+        -- Значение
+        local value = UIFactory.createText({
+            Name = "Value",
+            Size = UDim2.new(1, -4, 0, 14),
+            Position = UDim2.new(0, 2, 0, 27),
+            Text = col.value,
+            TextSize = 9,
+            TextColor3 = Config.Theme.TextSecondary,
+            Font = Enum.Font.Code,
+            ZIndex = 17,
+            Parent = colFrame
+        })
+        
+        -- Разделитель между колонками
+        if i < #columns then
+            UIFactory.createFrame({
+                Name = "Divider_" .. i,
+                Size = UDim2.new(0, 1, 0.6, 0),
+                Position = UDim2.new(1, 0, 0.2, 0),
+                BackgroundColor3 = Config.Theme.PrimaryDark,
+                BackgroundTransparency = 0.6,
+                ZIndex = 16,
+                Parent = colFrame
+            })
+        end
+    end
+    
+    return panel
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 18: КНОПКИ СОЦИАЛЬНЫХ СЕТЕЙ / ССЫЛКИ
+-- ============================================================================
+
+local SocialBar = {}
+
+function SocialBar.create(parent, position)
+    local bar = UIFactory.createFrame({
+        Name = "SocialBar",
+        Size = UDim2.new(0.6, 0, 0, 28),
+        Position = position or UDim2.new(0.2, 0, 0, 370),
+        BackgroundTransparency = 1,
+        ZIndex = 15,
+        Parent = parent
+    })
+    
+    local socials = {
+        {icon = "💬", label = "Discord", color = Color3.fromRGB(88, 101, 242)},
+        {icon = "📺", label = "YouTube", color = Color3.fromRGB(255, 0, 0)},
+        {icon = "🐦", label = "Twitter", color = Color3.fromRGB(29, 155, 240)},
+        {icon = "⭐", label = "GitHub", color = Color3.fromRGB(200, 200, 200)},
+    }
+    
+    for i, social in ipairs(socials) do
+        local btn = UIFactory.createFrame({
+            Name = social.label,
+            Size = UDim2.new(1/#socials, -4, 1, 0),
+            Position = UDim2.new((i-1)/#socials, 2, 0, 0),
+            BackgroundColor3 = social.color,
+            BackgroundTransparency = 0.8,
+            CornerRadius = 6,
+            ZIndex = 16,
+            Parent = bar,
+            StrokeColor = social.color,
+            StrokeThickness = 1,
+            StrokeTransparency = 0.5,
+        })
+        
+        local label = UIFactory.createText({
+            Name = "Label",
+            Size = UDim2.new(1, 0, 1, 0),
+            Text = social.icon .. " " .. social.label,
+            TextSize = 9,
+            TextColor3 = social.color,
+            Font = Enum.Font.GothamMedium,
+            ZIndex = 17,
+            Parent = btn
+        })
+        
+        -- Hover-эффект
+        AnimationEngine.breathe(btn, 0.75, 0.9, 1 + i * 0.3)
+    end
+    
+    return bar
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 19: СБОРКА ГЛАВНОГО GUI
+-- ============================================================================
+
+-- Удаление старого GUI
+if CoreGui:FindFirstChild("ChipzterUltraLoader") then
+    CoreGui:FindFirstChild("ChipzterUltraLoader"):Destroy()
+end
+
+-- Создание ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ChipzterUltraLoader"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.DisplayOrder = 999
+
+pcall(function()
+    ScreenGui.Parent = CoreGui
+end)
+if not ScreenGui.Parent then
+    ScreenGui.Parent = player:WaitForChild("PlayerGui")
+end
+
+-- ═══════════════════ ФОН ═══════════════════
+
+local FullscreenBG = UIFactory.createFrame({
+    Name = "FullscreenBackground",
+    Size = UDim2.new(1, 0, 1, 0),
+    BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+    BackgroundTransparency = 1,
+    ZIndex = 0,
+    Parent = ScreenGui
+})
+
+-- ═══════════════════ ОСНОВНАЯ РАМКА ═══════════════════
+
+local MainFrame = UIFactory.createFrame({
+    Name = "MainFrame",
+    Size = UDim2.new(0, Config.GUI.MainWidth, 0, Config.GUI.MainHeight + 60),
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    AnchorPoint = Vector2.new(0.5, 0.5),
+    BackgroundColor3 = Config.Theme.Background,
+    BackgroundTransparency = 1,
+    CornerRadius = Config.GUI.CornerRadius,
+    ClipsDescendants = true,
+    ZIndex = 5,
+    Parent = ScreenGui,
+})
+
+-- Обводка главной рамки
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Color = Config.Theme.Primary
+MainStroke.Thickness = Config.GUI.StrokeThickness
+MainStroke.Transparency = 1
+MainStroke.Parent = MainFrame
+
+-- Внутренний слой
+local InnerFrame = UIFactory.createFrame({
+    Name = "InnerFrame",
+    Size = UDim2.new(1, -4, 1, -4),
+    Position = UDim2.new(0, 2, 0, 2),
+    BackgroundColor3 = Config.Theme.BackgroundSecondary,
+    BackgroundTransparency = 1,
+    CornerRadius = Config.GUI.CornerRadius - 2,
+    ClipsDescendants = true,
+    ZIndex = 6,
+    Parent = MainFrame,
+})
+
+-- Внутренняя обводка
+local InnerStroke = Instance.new("UIStroke")
+InnerStroke.Color = Config.Theme.SurfaceLight
+InnerStroke.Thickness = 1
+InnerStroke.Transparency = 1
+InnerStroke.Parent = InnerFrame
+
+-- ═══════════════════ ВЕРХНЯЯ НЕОНОВАЯ ЛИНИЯ ═══════════════════
+
+local TopNeonLine = UIFactory.createFrame({
+    Name = "TopNeonLine",
+    Size = UDim2.new(0.7, 0, 0, 3),
+    Position = UDim2.new(0.15, 0, 0, 0),
+    BackgroundColor3 = Config.Theme.Primary,
+    BackgroundTransparency = 1,
+    ZIndex = 20,
+    Parent = MainFrame,
+    CornerRadius = 3,
+})
+
+local topLineGradient = Instance.new("UIGradient")
+topLineGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Config.Theme.PrimaryDark),
+    ColorSequenceKeypoint.new(0.3, Config.Theme.PrimaryLight),
+    ColorSequenceKeypoint.new(0.5, Config.Theme.Accent),
+    ColorSequenceKeypoint.new(0.7, Config.Theme.PrimaryLight),
+    ColorSequenceKeypoint.new(1, Config.Theme.PrimaryDark),
+})
+topLineGradient.Parent = TopNeonLine
+
+-- Свечение верхней линии
+local TopNeonGlow = UIFactory.createFrame({
+    Name = "TopNeonGlow",
+    Size = UDim2.new(0.7, 10, 0, 15),
+    Position = UDim2.new(0.15, -5, 0, -6),
+    BackgroundColor3 = Config.Theme.Primary,
+    BackgroundTransparency = 1,
+    ZIndex = 19,
+    Parent = MainFrame,
+    CornerRadius = 8,
+})
+
+-- Нижняя неоновая линия
+local BottomNeonLine = UIFactory.createFrame({
+    Name = "BottomNeonLine",
+    Size = UDim2.new(0.5, 0, 0, 2),
+    Position = UDim2.new(0.25, 0, 1, -2),
+    BackgroundColor3 = Config.Theme.Secondary,
+    BackgroundTransparency = 1,
+    ZIndex = 20,
+    Parent = MainFrame,
+    CornerRadius = 2,
+})
+
+local bottomLineGradient = Instance.new("UIGradient")
+bottomLineGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Config.Theme.SecondaryDark),
+    ColorSequenceKeypoint.new(0.5, Config.Theme.Secondary),
+    ColorSequenceKeypoint.new(1, Config.Theme.SecondaryDark),
+})
+bottomLineGradient.Parent = BottomNeonLine
+
+-- ═══════════════════ СПИННЕР ═══════════════════
+
+local spinner = CircularSpinner.create(InnerFrame, 85, UDim2.new(0.5, 0, 0, 20))
+
+-- ═══════════════════ НАЗВАНИЕ ═══════════════════
+
+local TitleLabel = UIFactory.createText({
+    Name = "Title",
+    Size = UDim2.new(1, 0, 0, 36),
+    Position = UDim2.new(0, 0, 0, 115),
+    Text = "CHIPZTER",
+    TextSize = 32,
+    TextColor3 = Config.Theme.TextPrimary,
+    TextTransparency = 1,
+    Font = Enum.Font.GothamBlack,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+local titleGradient = Instance.new("UIGradient")
+titleGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Config.Theme.Primary),
+    ColorSequenceKeypoint.new(0.25, Config.Theme.PrimaryLight),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
+    ColorSequenceKeypoint.new(0.75, Config.Theme.PrimaryLight),
+    ColorSequenceKeypoint.new(1, Config.Theme.Secondary),
+})
+titleGradient.Parent = TitleLabel
+
+-- Подзаголовок
+local SubtitleLabel = UIFactory.createText({
+    Name = "Subtitle",
+    Size = UDim2.new(1, 0, 0, 18),
+    Position = UDim2.new(0, 0, 0, 148),
+    Text = "— Ultra Premium Script Hub —",
+    TextSize = 12,
+    TextColor3 = Config.Theme.TextMuted,
+    TextTransparency = 1,
+    Font = Enum.Font.Gotham,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+-- Версия
+local VersionBadge = UIFactory.createFrame({
+    Name = "VersionBadge",
+    Size = UDim2.new(0, 60, 0, 18),
+    Position = UDim2.new(0.5, 0, 0, 168),
+    AnchorPoint = Vector2.new(0.5, 0),
+    BackgroundColor3 = Config.Theme.Primary,
+    BackgroundTransparency = 1,
+    CornerRadius = 9,
+    ZIndex = 16,
+    Parent = InnerFrame,
+})
+
+local versionText = UIFactory.createText({
+    Name = "VersionText",
+    Size = UDim2.new(1, 0, 1, 0),
+    Text = "v3.0.0",
+    TextSize = 9,
+    TextColor3 = Config.Theme.TextPrimary,
+    TextTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    ZIndex = 17,
+    Parent = VersionBadge,
+})
+
+-- ═══════════════════ ПРОГРЕСС БАР ═══════════════════
+
+local ProgressContainer = UIFactory.createFrame({
+    Name = "ProgressContainer",
+    Size = UDim2.new(0.78, 0, 0, 28),
+    Position = UDim2.new(0.11, 0, 0, 195),
+    BackgroundTransparency = 1,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+-- Фон прогресс бара
+local ProgressBG = UIFactory.createFrame({
+    Name = "ProgressBG",
+    Size = UDim2.new(1, 0, 0, 8),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundColor3 = Config.Theme.Surface,
+    BackgroundTransparency = 1,
+    CornerRadius = 4,
+    ZIndex = 15,
+    Parent = ProgressContainer,
+    StrokeColor = Config.Theme.SurfaceLight,
+    StrokeThickness = 1,
+    StrokeTransparency = 1,
+})
+
+-- Заполнение прогресс бара
+local ProgressFill = UIFactory.createFrame({
+    Name = "ProgressFill",
+    Size = UDim2.new(0, 0, 1, 0),
+    BackgroundColor3 = Config.Theme.Primary,
+    BackgroundTransparency = 0,
+    CornerRadius = 4,
+    ZIndex = 16,
+    Parent = ProgressBG,
+})
+
+local progressGradient = Instance.new("UIGradient")
+progressGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Config.Theme.PrimaryDark),
+    ColorSequenceKeypoint.new(0.3, Config.Theme.Primary),
+    ColorSequenceKeypoint.new(0.6, Config.Theme.PrimaryLight),
+    ColorSequenceKeypoint.new(0.8, Config.Theme.Accent),
+    ColorSequenceKeypoint.new(1, Config.Theme.Secondary),
+})
+progressGradient.Parent = ProgressFill
+
+-- Свечение прогресс бара
+local ProgressGlow = UIFactory.createFrame({
+    Name = "ProgressGlow",
+    Size = UDim2.new(1, 6, 1, 12),
+    Position = UDim2.new(0, -3, 0, -6),
+    BackgroundColor3 = Config.Theme.Primary,
+    BackgroundTransparency = 0.7,
+    CornerRadius = 8,
+    ZIndex = 15,
+    Parent = ProgressFill,
+})
+
+-- Блик на прогресс баре (shimmer)
+local ProgressShimmer = UIFactory.createFrame({
+    Name = "ProgressShimmer",
+    Size = UDim2.new(0.3, 0, 1, 0),
+    Position = UDim2.new(-0.3, 0, 0, 0),
+    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+    BackgroundTransparency = 0.7,
+    CornerRadius = 4,
+    ZIndex = 17,
+    Parent = ProgressFill,
+})
+
+local shimmerGradient = Instance.new("UIGradient")
+shimmerGradient.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0, 1),
+    NumberSequenceKeypoint.new(0.4, 0),
+    NumberSequenceKeypoint.new(0.6, 0),
+    NumberSequenceKeypoint.new(1, 1),
+})
+shimmerGradient.Parent = ProgressShimmer
+
+-- Процент текст
+local PercentText = UIFactory.createText({
+    Name = "PercentText",
+    Size = UDim2.new(1, 0, 0, 16),
+    Position = UDim2.new(0, 0, 0, 12),
+    Text = "0%",
+    TextSize = 11,
+    TextColor3 = Config.Theme.TextMuted,
+    TextTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextXAlignment = Enum.TextXAlignment.Right,
+    ZIndex = 16,
+    Parent = ProgressContainer,
+})
+
+-- Статус текст
+local StatusText = UIFactory.createText({
+    Name = "StatusText",
+    Size = UDim2.new(1, 0, 0, 16),
+    Position = UDim2.new(0, 0, 0, 12),
+    Text = "Initializing...",
+    TextSize = 10,
+    TextColor3 = Config.Theme.TextMuted,
+    TextTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 16,
+    Parent = ProgressContainer,
+})
+
+-- ═══════════════════ ВОЛНОВОЙ ЭКВАЛАЙЗЕР ═══════════════════
+
+local waveBar = WaveEffect.createWaveBar(InnerFrame, UDim2.new(0.1, 0, 0, 228), 5)
+
+-- ═══════════════════ КОНСОЛЬ ЛОГОВ ═══════════════════
+
+local logConsole = LogConsole.init(InnerFrame, UDim2.new(0.075, 0, 0, 248), UDim2.new(0.85, 0, 0, 75))
+
+-- ═══════════════════ ИНФОРМАЦИОННАЯ ПАНЕЛЬ ═══════════════════
+
+local infoPanel = InfoPanel.create(InnerFrame, UDim2.new(0.075, 0, 0, 330))
+
+-- ═══════════════════ НИЖНИЙ ТЕКСТ ═══════════════════
+
+local FooterText = UIFactory.createText({
+    Name = "Footer",
+    Size = UDim2.new(1, 0, 0, 14),
+    Position = UDim2.new(0, 0, 1, -18),
+    Text = "© 2025 Chipzter • All Rights Reserved • Made with ❤️",
+    TextSize = 8,
+    TextColor3 = Config.Theme.TextDim,
+    TextTransparency = 1,
+    Font = Enum.Font.Gotham,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+-- ═══════════════════ ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ ═══════════════════
+
+-- Голографические скобки
+local brackets = HolographicEffect.createCornerBrackets(InnerFrame)
+
+-- Голографические линии
+local holoLines = {}
+for i = 1, 4 do
+    local yPos = 110 + i * 65
+    table.insert(holoLines, HolographicEffect.createHoloLine(InnerFrame, yPos, 0.3 + math.random() * 0.4))
+end
+
+-- Потоки данных
+local dataStreams = {}
+for i = 1, 2 do
+    table.insert(dataStreams, HolographicEffect.createDataStream(InnerFrame, 100 + i * 140))
+end
+
+-- ═══════════════════ ФОНОВЫЕ ЭФФЕКТЫ ═══════════════════
+
+-- Звёздное поле
+StarField.init(InnerFrame)
+
+-- Геометрические фигуры
+GeoBackground.init(InnerFrame)
+
+-- Гексагональная сетка
+HexGrid.create(InnerFrame)
+
+-- Частицы
+ParticleSystem.init(InnerFrame)
+
+-- Сканлайны
+ScanlineEffect.create(InnerFrame)
+
+-- Система уведомлений
+NotificationSystem.init(ScreenGui)
+
+-- ============================================================================
+-- СЕКЦИЯ 20: ГЕНЕРАТОР ДЕКОРАТИВНОГО ASCII-АРТ
+-- ============================================================================
+
+local AsciiArt = {}
+
+function AsciiArt.createDecoBlock(parent, position, text)
+    local block = UIFactory.createText({
+        Name = "AsciiBlock",
+        Size = UDim2.new(0, 80, 0, 30),
+        Position = position,
+        Text = text,
+        TextSize = 7,
+        TextColor3 = Config.Theme.Neon,
+        TextTransparency = 0.85,
+        Font = Enum.Font.Code,
+        ZIndex = 3,
+        Parent = parent,
+    })
+    
+    AnimationEngine.breathe(block, 0.8, 0.95, 1 + math.random())
+    
+    return block
+end
+
+-- Создание ASCII блоков в углах
+AsciiArt.createDecoBlock(InnerFrame, UDim2.new(0, 5, 0, 5), "01101001\n10010110")
+AsciiArt.createDecoBlock(InnerFrame, UDim2.new(1, -85, 0, 5), "SYS:OK\nMEM:98%")
+AsciiArt.createDecoBlock(InnerFrame, UDim2.new(0, 5, 1, -35), "NET:●●●\nPNG:12ms")
+AsciiArt.createDecoBlock(InnerFrame, UDim2.new(1, -85, 1, -35), "FPS:" .. math.random(55,60) .. "\nGPU:OK")
+
+-- ============================================================================
+-- СЕКЦИЯ 21: ДЕКОРАТИВНЫЕ РАЗДЕЛИТЕЛИ
+-- ============================================================================
+
+local function createDivider(parent, position, width, style)
+    local divider = UIFactory.createFrame({
+        Name = "Divider",
+        Size = UDim2.new(width or 0.8, 0, 0, 1),
+        Position = position,
+        BackgroundColor3 = Config.Theme.SurfaceLight,
+        BackgroundTransparency = 0.6,
+        ZIndex = 10,
+        Parent = parent,
+    })
+    
+    if style == "gradient" then
+        local grad = Instance.new("UIGradient")
+        grad.Transparency = NumberSequence.new({
+            NumberSequenceKeypoint.new(0, 1),
+            NumberSequenceKeypoint.new(0.3, 0),
+            NumberSequenceKeypoint.new(0.7, 0),
+            NumberSequenceKeypoint.new(1, 1),
+        })
+        grad.Parent = divider
+    elseif style == "dashed" then
+        divider.Size = UDim2.new(0, 0, 0, 0)
+        for j = 1, 20 do
+            UIFactory.createFrame({
+                Name = "Dash_" .. j,
+                Size = UDim2.new(0, 8, 0, 1),
+                Position = UDim2.new(0, (j-1) * 15, 0, 0),
+                BackgroundColor3 = Config.Theme.SurfaceLight,
+                BackgroundTransparency = 0.5,
+                ZIndex = 10,
+                Parent = divider,
+            })
+        end
+    end
+    
+    return divider
+end
+
+createDivider(InnerFrame, UDim2.new(0.1, 0, 0, 108), 0.8, "gradient")
+createDivider(InnerFrame, UDim2.new(0.1, 0, 0, 190), 0.8, "gradient")
+createDivider(InnerFrame, UDim2.new(0.1, 0, 0, 240), 0.8, "gradient")
+createDivider(InnerFrame, UDim2.new(0.1, 0, 0, 322), 0.8, "gradient")
+
+-- ============================================================================
+-- СЕКЦИЯ 22: АНИМИРОВАННЫЕ ТОЧКИ ЗАГРУЗКИ
+-- ============================================================================
+
+local LoadingDots = {}
+
+function LoadingDots.create(parent, position)
+    local container = UIFactory.createFrame({
+        Name = "LoadingDots",
+        Size = UDim2.new(0, 60, 0, 10),
+        Position = position or UDim2.new(0.5, 0, 0, 183),
+        AnchorPoint = Vector2.new(0.5, 0),
+        BackgroundTransparency = 1,
+        ZIndex = 15,
+        Parent = parent,
+    })
+    
+    local dots = {}
+    local dotCount = 5
+    
+    for i = 1, dotCount do
+        local dot = UIFactory.createFrame({
+            Name = "Dot_" .. i,
+            Size = UDim2.new(0, 6, 0, 6),
+            Position = UDim2.new(0, (i-1) * 12, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            BackgroundColor3 = Config.Theme.Primary,
+            BackgroundTransparency = 0.7,
+            CornerRadius = 6,
+            ZIndex = 16,
+            Parent = container,
+        })
+        
+        table.insert(dots, dot)
+    end
+    
+    -- Анимация волны
+    local conn = RunService.RenderStepped:Connect(function()
+        if not container or not container.Parent then return end
+        
+        local t = tick()
+        
+        for i, dot in ipairs(dots) do
+            if dot and dot.Parent then
+                local wave = math.sin(t * 5 - i * 0.5)
+                local scale = 1 + math.max(0, wave) * 0.6
+                dot.Size = UDim2.new(0, 6 * scale, 0, 6 * scale)
+                dot.BackgroundTransparency = 0.3 + (1 - math.max(0, wave)) * 0.5
+                
+                local hue = (i / dotCount + t * 0.2) % 1
+                dot.BackgroundColor3 = Color3.fromHSV(hue * 0.3 + 0.7, 0.6, 1)
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return container
+end
+
+local loadingDots = LoadingDots.create(InnerFrame)
+
+-- ============================================================================
+-- СЕКЦИЯ 23: ПИКСЕЛЬНЫЕ УГЛОВЫЕ ДЕКОРАЦИИ
+-- ============================================================================
+
+local function createPixelCorner(parent, corner, size)
+    size = size or 3
+    local pixels = {}
+    local pattern = {
+        {1,1,1,1,0},
+        {1,0,0,0,0},
+        {1,0,0,0,0},
+        {1,0,0,0,0},
+        {0,0,0,0,0},
+    }
+    
+    for row = 1, #pattern do
+        for col = 1, #pattern[row] do
+            if pattern[row][col] == 1 then
+                local px, py = 0, 0
+                
+                if corner == "TL" then
+                    px = (col-1) * (size+1)
+                    py = (row-1) * (size+1)
+                elseif corner == "TR" then
+                    px = -(col) * (size+1)
+                    py = (row-1) * (size+1)
+                elseif corner == "BL" then
+                    px = (col-1) * (size+1)
+                    py = -(row) * (size+1)
+                elseif corner == "BR" then
+                    px = -(col) * (size+1)
+                    py = -(row) * (size+1)
+                end
+                
+                local anchorX = (corner == "TR" or corner == "BR") and 1 or 0
+                local anchorY = (corner == "BL" or corner == "BR") and 1 or 0
+                
+                local pixel = UIFactory.createFrame({
+                    Name = "Pixel_" .. corner .. "_" .. row .. "_" .. col,
+                    Size = UDim2.new(0, size, 0, size),
+                    Position = UDim2.new(anchorX, px, anchorY, py),
+                    BackgroundColor3 = Config.Theme.Cyber,
+                    BackgroundTransparency = 0.6,
+                    ZIndex = 8,
+                    Parent = parent,
+                })
+                
+                table.insert(pixels, pixel)
+            end
+        end
+    end
+    
+    return pixels
+end
+
+createPixelCorner(InnerFrame, "TL", 3)
+createPixelCorner(InnerFrame, "TR", 3)
+createPixelCorner(InnerFrame, "BL", 3)
+createPixelCorner(InnerFrame, "BR", 3)
+
+-- ============================================================================
+-- СЕКЦИЯ 24: МИНИ-ГРАФИК (ДЕКОРАТИВНЫЙ)
+-- ============================================================================
+
+local function createMiniChart(parent, position)
+    local chartContainer = UIFactory.createFrame({
+        Name = "MiniChart",
+        Size = UDim2.new(0, 100, 0, 30),
+        Position = position,
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 8,
+        Parent = parent,
+    })
+    
+    local barCount = 20
+    local chartBars = {}
+    
+    for i = 1, barCount do
+        local barHeight = math.random(3, 25)
+        local bar = UIFactory.createFrame({
+            Name = "ChartBar_" .. i,
+            Size = UDim2.new(1/barCount, -1, 0, barHeight),
+            Position = UDim2.new((i-1)/barCount, 0, 1, -barHeight),
+            BackgroundColor3 = Config.Theme.Primary,
+            BackgroundTransparency = 0.5,
+            CornerRadius = 1,
+            ZIndex = 9,
+            Parent = chartContainer,
+        })
+        
+        table.insert(chartBars, {instance = bar, baseHeight = barHeight, index = i})
+    end
+    
+    -- Анимация графика
+    local conn = RunService.RenderStepped:Connect(function()
+        if not chartContainer or not chartContainer.Parent then return end
+        
+        local t = tick()
+        
+        for _, barData in ipairs(chartBars) do
+            if barData.instance and barData.instance.Parent then
+                local wave = math.sin(t * 2 + barData.index * 0.4) * 0.4 + 0.6
+                local h = barData.baseHeight * wave
+                barData.instance.Size = UDim2.new(1/barCount, -1, 0, math.max(2, h))
+                barData.instance.Position = UDim2.new((barData.index-1)/barCount, 0, 1, -math.max(2, h))
+                
+                local intensity = h / 25
+                barData.instance.BackgroundColor3 = Utility.lerpColor(
+                    Config.Theme.PrimaryDark,
+                    Config.Theme.Accent,
+                    intensity
+                )
+            end
+        end
+    end)
+    
+    Utility.addConnection(conn)
+    
+    return chartContainer
+end
+
+createMiniChart(InnerFrame, UDim2.new(0.02, 0, 0, 50))
+createMiniChart(InnerFrame, UDim2.new(0.78, 0, 0, 50))
+
+-- ============================================================================
+-- СЕКЦИЯ 25: ДВИЖУЩИЕСЯ ЛИНИИ СЕТКИ
+-- ============================================================================
+
+local function createMovingGrid(parent)
+    local gridContainer = UIFactory.createFrame({
+        Name = "MovingGrid",
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        ClipsDescendants = true,
+        ZIndex = 1,
+        Parent = parent,
+    })
+    
+    -- Горизонтальные линии
+    local hLines = {}
+    for i = 1, 8 do
+        local line = UIFactory.createFrame({
+            Name = "HLine_" .. i,
+            Size = UDim2.new(1, 0, 0, 1),
+            Position = UDim2.new(0, 0, i/9, 0),
+            BackgroundColor3 = Config.Theme.SurfaceLight,
+            BackgroundTransparency = 0.92,
+            ZIndex = 1,
+            Parent = gridContainer,
+        })
+        table.insert(hLines, line)
+    end
+    
+    -- Вертикальные линии
+    local vLines = {}
+    for i = 1, 10 do
+        local line = UIFactory.createFrame({
+            Name = "VLine_" .. i,
+            Size = UDim2.new(0, 1, 1, 0),
+            Position = UDim2.new(i/11, 0, 0, 0),
+            BackgroundColor3 = Config.Theme.SurfaceLight,
+            BackgroundTransparency = 0.92,
+            ZIndex = 1,
+            Parent = gridContainer,
+        })
+        table.insert(vLines, line)
+    end
+    
+    return gridContainer
+end
+
+createMovingGrid(InnerFrame)
+
+-- ============================================================================
+-- СЕКЦИЯ 26: СЕКУНДОМЕР / ТАЙМЕР ЗАГРУЗКИ
+-- ============================================================================
+
+local TimerDisplay = UIFactory.createText({
+    Name = "Timer",
+    Size = UDim2.new(0, 80, 0, 14),
+    Position = UDim2.new(1, -90, 0, 4),
+    Text = "00:00.000",
+    TextSize = 9,
+    TextColor3 = Config.Theme.Neon,
+    TextTransparency = 1,
+    Font = Enum.Font.Code,
+    TextXAlignment = Enum.TextXAlignment.Right,
+    ZIndex = 25,
+    Parent = InnerFrame,
+})
+
+local timerStart = tick()
+local timerActive = true
+
+local timerConn = RunService.RenderStepped:Connect(function()
+    if not timerActive or not TimerDisplay or not TimerDisplay.Parent then return end
+    
+    local elapsed = tick() - timerStart
+    local minutes = math.floor(elapsed / 60)
+    local seconds = math.floor(elapsed % 60)
+    local millis = math.floor((elapsed % 1) * 1000)
+    
+    TimerDisplay.Text = string.format("%02d:%02d.%03d", minutes, seconds, millis)
+end)
+
+Utility.addConnection(timerConn)
+
+-- ============================================================================
+-- СЕКЦИЯ 27: ИНДИКАТОР ПИНГА (ДЕКОРАТИВНЫЙ)
+-- ============================================================================
+
+local PingIndicator = UIFactory.createFrame({
+    Name = "PingIndicator",
+    Size = UDim2.new(0, 80, 0, 14),
+    Position = UDim2.new(0, 10, 0, 4),
+    BackgroundTransparency = 1,
+    ZIndex = 25,
+    Parent = InnerFrame,
+})
+
+local pingDot = UIFactory.createFrame({
+    Name = "PingDot",
+    Size = UDim2.new(0, 6, 0, 6),
+    Position = UDim2.new(0, 0, 0.5, 0),
+    AnchorPoint = Vector2.new(0, 0.5),
+    BackgroundColor3 = Config.Theme.Success,
+    CornerRadius = 6,
+    ZIndex = 26,
+    Parent = PingIndicator,
+})
+
+local pingText = UIFactory.createText({
+    Name = "PingText",
+    Size = UDim2.new(1, -10, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    Text = "12ms",
+    TextSize = 9,
+    TextColor3 = Config.Theme.Success,
+    TextTransparency = 1,
+    Font = Enum.Font.Code,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 26,
+    Parent = PingIndicator,
+})
+
+-- Анимация пинга
+local pingConn = RunService.RenderStepped:Connect(function()
+    if not pingText or not pingText.Parent then return end
+    
+    local t = tick()
+    if math.floor(t) % 2 == 0 then
+        local fakePing = math.random(8, 25)
+        pingText.Text = fakePing .. "ms"
+        
+        if fakePing < 15 then
+            pingDot.BackgroundColor3 = Config.Theme.Success
+            pingText.TextColor3 = Config.Theme.Success
+        elseif fakePing < 20 then
+            pingDot.BackgroundColor3 = Config.Theme.Warning
+            pingText.TextColor3 = Config.Theme.Warning
+        else
+            pingDot.BackgroundColor3 = Config.Theme.Error
+            pingText.TextColor3 = Config.Theme.Error
+        end
+    end
+    
+    -- Пульсация точки
+    local pulse = (math.sin(t * 6) + 1) / 2
+    pingDot.BackgroundTransparency = pulse * 0.4
+end)
+
+Utility.addConnection(pingConn)
+
+-- ============================================================================
+-- СЕКЦИЯ 28: БЕГУЩАЯ СТРОКА ВНИЗУ
+-- ============================================================================
+
+local TickerBar = UIFactory.createFrame({
+    Name = "TickerBar",
+    Size = UDim2.new(1, 0, 0, 16),
+    Position = UDim2.new(0, 0, 1, -36),
+    BackgroundColor3 = Config.Theme.BackgroundTertiary,
+    BackgroundTransparency = 1,
+    ClipsDescendants = true,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+local tickerText = UIFactory.createText({
+    Name = "TickerText",
+    Size = UDim2.new(4, 0, 1, 0),
+    Position = UDim2.new(1, 0, 0, 0),
+    Text = "★ CHIPZTER ULTRA PREMIUM ★ Secure Connection Established ★ All Systems Operational ★ Loading Modules ★ Encrypting Data ★ Building Interface ★ Welcome " .. player.Name .. " ★ Session Active ★",
+    TextSize = 9,
+    TextColor3 = Config.Theme.TextDim,
+    TextTransparency = 1,
+    Font = Enum.Font.Code,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    ZIndex = 16,
+    Parent = TickerBar,
+})
+
+-- Анимация бегущей строки
+task.spawn(function()
+    while tickerText and tickerText.Parent do
+        tickerText.Position = UDim2.new(1, 0, 0, 0)
+        AnimationEngine.tween(tickerText, {
+            Position = UDim2.new(-4, 0, 0, 0)
+        }, 25, Enum.EasingStyle.Linear).Completed:Wait()
+    end
+end)
+
+-- ============================================================================
+-- СЕКЦИЯ 29: ДЕКОРАТИВНЫЕ МЕТКИ ВРЕМЕНИ И ДАТЫ
+-- ============================================================================
+
+local DateTimeLabel = UIFactory.createText({
+    Name = "DateTime",
+    Size = UDim2.new(0.4, 0, 0, 12),
+    Position = UDim2.new(0.55, 0, 0, 388),
+    Text = Utility.getDate() .. " | " .. Utility.getTimestamp(),
+    TextSize = 8,
+    TextColor3 = Config.Theme.TextDim,
+    TextTransparency = 1,
+    Font = Enum.Font.Code,
+    TextXAlignment = Enum.TextXAlignment.Right,
+    ZIndex = 15,
+    Parent = InnerFrame,
+})
+
+local dtConn = RunService.RenderStepped:Connect(function()
+    if not DateTimeLabel or not DateTimeLabel.Parent then return end
+    DateTimeLabel.Text = Utility.getDate() .. " | " .. Utility.getTimestamp()
+end)
+
+Utility.addConnection(dtConn)
+
+-- ============================================================================
+-- СЕКЦИЯ 30: ГЛАВНЫЙ ЦИКЛ АНИМАЦИИ (RENDER LOOP)
+-- ============================================================================
+
+local mainRenderConn = RunService.RenderStepped:Connect(function()
+    if not ScreenGui or not ScreenGui.Parent then return end
+    
+    local t = tick()
+    
+    -- Анимация градиента заголовка
+    if titleGradient then
+        titleGradient.Offset = Vector2.new(math.sin(t * 1.5) * 0.3, 0)
+    end
+    
+    -- Анимация верхней линии
+    if topLineGradient then
+        topLineGradient.Offset = Vector2.new(math.sin(t * 2.5) * 0.4, 0)
+    end
+    
+    -- Анимация нижней линии
+    if bottomLineGradient then
+        bottomLineGradient.Offset = Vector2.new(math.cos(t * 2) * 0.3, 0)
+    end
+    
+    -- Анимация прогресс градиента
+    if progressGradient then
+        progressGradient.Offset = Vector2.new(math.sin(t * 3) * 0.2, 0)
+    end
+    
+    -- Шиммер на прогресс баре
+    if ProgressShimmer and ProgressShimmer.Parent then
+        local shimmerPos = (t * 0.5) % 1.6 - 0.3
+        ProgressShimmer.Position = UDim2.new(shimmerPos, 0, 0, 0)
+    end
+    
+    -- Пульсация свечения прогресс бара
+    if ProgressGlow and ProgressGlow.Parent then
+        ProgressGlow.BackgroundTransparency = 0.6 + math.sin(t * 4) * 0.15
+    end
+    
+    -- Пульсация основной обводки
+    if MainStroke then
+        local hue = (t * 0.05) % 1
+        MainStroke.Color = Color3.fromHSV(hue * 0.2 + 0.7, 0.5, 0.9)
+        MainStroke.Transparency = 0.3 + math.sin(t * 2) * 0.15
+    end
+    
+    -- Пульсация внутренней обводки
+    if InnerStroke then
+        InnerStroke.Transparency = 0.5 + math.sin(t * 1.5) * 0.2
+    end
+    
+    -- Свечение верхней линии
+    if TopNeonGlow and TopNeonGlow.Parent then
+        TopNeonGlow.BackgroundTransparency = 0.75 + math.sin(t * 3) * 0.1
+    end
+end)
+
+Utility.addConnection(mainRenderConn)
+
+-- Генерация частиц
+local particleSpawnConn
+local lastSpawnTime = 0
+
+particleSpawnConn = RunService.RenderStepped:Connect(function()
+    if not ParticleSystem.active then return end
+    
+    if tick() - lastSpawnTime > Config.Particles.SpawnRate then
+        lastSpawnTime = tick()
+        
+        local types = {"default", "star", "diamond", "spark", "hex"}
+        ParticleSystem.createParticle(types[math.random(1, #types)])
+    end
+end)
+
+Utility.addConnection(particleSpawnConn)
+
+-- Стреляющие звёзды
+task.spawn(function()
+    while ScreenGui and ScreenGui.Parent do
+        task.wait(math.random(3, 8))
+        StarField.shootingStar()
+    end
+end)
+
+-- ============================================================================
+-- СЕКЦИЯ 31: ФУНКЦИЯ ОБНОВЛЕНИЯ ПРОГРЕССА
+-- ============================================================================
+
+local function updateProgress(percent, statusText)
+    -- Обновление прогресс бара
+    AnimationEngine.tween(ProgressFill, {
+        Size = UDim2.new(percent / 100, 0, 1, 0)
+    }, 0.4, Enum.EasingStyle.Quart)
+    
+    -- Обновление текста процента
+    PercentText.Text = math.floor(percent) .. "%"
+    
+    -- Обновление статуса
+    StatusText.Text = statusText
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 32: ПОСЛЕДОВАТЕЛЬНОСТЬ ПОЯВЛЕНИЯ (INTRO SEQUENCE)
+-- ============================================================================
+
+local function playIntroSequence()
+    -- Фаза 1: Затемнение экрана
+    AnimationEngine.tween(FullscreenBG, {BackgroundTransparency = 0.2}, 0.8)
+    task.wait(0.3)
+    
+    -- Фаза 2: Появление основной рамки
+    MainFrame.BackgroundTransparency = 1
+    MainFrame.Size = UDim2.new(0, Config.GUI.MainWidth * 0.8, 0, (Config.GUI.MainHeight + 60) * 0.8)
+    
+    AnimationEngine.tween(MainFrame, {
+        BackgroundTransparency = 0,
+        Size = UDim2.new(0, Config.GUI.MainWidth, 0, Config.GUI.MainHeight + 60)
+    }, 0.8, Enum.EasingStyle.Back)
+    
+    task.wait(0.2)
+    
+    AnimationEngine.tween(InnerFrame, {BackgroundTransparency = 0}, 0.6)
+    AnimationEngine.tween(MainStroke, {Transparency = 0.3}, 0.6)
+    AnimationEngine.tween(InnerStroke, {Transparency = 0.5}, 0.6)
+    
+    task.wait(0.3)
+    
+    -- Фаза 3: Неоновые линии
+    AnimationEngine.tween(TopNeonLine, {BackgroundTransparency = 0}, 0.5)
+    AnimationEngine.tween(TopNeonGlow, {BackgroundTransparency = 0.75}, 0.5)
+    AnimationEngine.tween(BottomNeonLine, {BackgroundTransparency = 0.3}, 0.5)
+    
+    -- Звук глитча (визуальный)
+    AnimationEngine.shake(MainFrame, 3, 0.15)
+    
+    task.wait(0.3)
+    
+    -- Фаза 4: Спиннер
+    for _, dot in ipairs(spinner.orbitDots) do
+        AnimationEngine.tween(dot.instance, {BackgroundTransparency = 0.2}, 0.3)
+        task.wait(0.05)
+    end
+    
+    task.wait(0.2)
+    
+    -- Фаза 5: Заголовок с глитч-эффектом
+    TitleLabel.TextTransparency = 0
+    AnimationEngine.glitchText(TitleLabel, "CHIPZTER", 0.6, 0.8)
+    
+    task.wait(0.3)
+    
+    -- Подзаголовок — печатная машинка
+    SubtitleLabel.TextTransparency = 0
+    AnimationEngine.typeWriter(SubtitleLabel, "— Ultra Premium Script Hub —", 0.04)
+    
+    task.wait(0.5)
+    
+    -- Бейдж версии
+    AnimationEngine.tween(VersionBadge, {BackgroundTransparency = 0.7}, 0.4)
+    AnimationEngine.tween(versionText, {TextTransparency = 0}, 0.4)
+    
+    task.wait(0.2)
+    
+    -- Фаза 6: Прогресс бар
+    AnimationEngine.tween(ProgressBG, {BackgroundTransparency = 0.3}, 0.4)
+    local bgStroke = ProgressBG:FindFirstChildOfClass("UIStroke")
+    if bgStroke then
+        AnimationEngine.tween(bgStroke, {Transparency = 0.5}, 0.4)
+    end
+    AnimationEngine.tween(StatusText, {TextTransparency = 0}, 0.4)
+    AnimationEngine.tween(PercentText, {TextTransparency = 0}, 0.4)
+    
+    task.wait(0.2)
+    
+    -- Фаза 7: Консоль
+    AnimationEngine.tween(logConsole, {BackgroundTransparency = 0.15}, 0.5)
+    local logStroke = logConsole:FindFirstChildOfClass("UIStroke")
+    if logStroke then
+        AnimationEngine.tween(logStroke, {Transparency = 0.3}, 0.5)
+    end
+    
+    task.wait(0.1)
+    
+    -- Фаза 8: Информационная панель
+    AnimationEngine.tween(infoPanel, {BackgroundTransparency = 0.4}, 0.5)
+    local infoStroke = infoPanel:FindFirstChildOfClass("UIStroke")
+    if infoStroke then
+        AnimationEngine.tween(infoStroke, {Transparency = 0.6}, 0.5)
+    end
+    
+    task.wait(0.1)
+    
+    -- Фаза 9: Остальные элементы
+    AnimationEngine.tween(FooterText, {TextTransparency = 0.5}, 0.4)
+    AnimationEngine.tween(TimerDisplay, {TextTransparency = 0.4}, 0.4)
+    AnimationEngine.tween(pingText, {TextTransparency = 0.3}, 0.4)
+    AnimationEngine.tween(DateTimeLabel, {TextTransparency = 0.5}, 0.4)
+    AnimationEngine.tween(tickerText, {TextTransparency = 0.6}, 0.4)
+    AnimationEngine.tween(TickerBar, {BackgroundTransparency = 0.8}, 0.4)
+    
+    task.wait(0.1)
+    
+    -- Уведомление о старте
+    NotificationSystem.push("System initialized successfully", "success", 2.5)
+    
+    task.wait(0.3)
+    
+    NotificationSystem.push("Welcome, " .. player.Name .. "!", "special", 2)
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 33: ПОСЛЕДОВАТЕЛЬНОСТЬ ЗАГРУЗКИ (LOADING SEQUENCE)
+-- ============================================================================
+
+local function playLoadingSequence()
+    LogConsole.addLog("Chipzter Ultra Loader v3.0.0", "system")
+    task.wait(0.2)
+    LogConsole.addLog("Session: " .. Utility.generateSessionID(), "data")
+    task.wait(0.15)
+    LogConsole.addLog("Platform: " .. Utility.getDeviceInfo(), "info")
+    task.wait(0.1)
+    LogConsole.addLog("Initializing subsystems...", "system")
+    task.wait(0.2)
+    
+    for i, stage in ipairs(Config.LoadingStages) do
+        -- Обновление прогресса
+        updateProgress(stage.percent, stage.text)
+        
+        -- Логирование
+        local logType = "info"
+        if stage.percent >= 95 then
+            logType = "success"
+        elseif string.find(stage.text, "Error") or string.find(stage.text, "❌") then
+            logType = "error"
+        elseif string.find(stage.text, "Warning") or string.find(stage.text, "⚠") then
+            logType = "warning"
+        elseif string.find(stage.text, "✅") or string.find(stage.text, "successful") then
+            logType = "success"
+        end
+        
+        -- Убираем эмодзи для лога
+        local cleanText = stage.text:gsub("[%z\1-\127\194-\244][\128-\191]*", function(c)
+            if #c > 1 then return "" end
+            return c
+        end):gsub("^%s+", "")
+        
+        LogConsole.addLog(cleanText ~= "" and cleanText or stage.text, logType)
+        
+        -- Случайные дополнительные логи
+        if math.random() < 0.3 then
+            task.wait(0.1)
+            local extraLogs = {
+                {"Checksum verified: 0x" .. string.format("%08X", math.random(0, 0xFFFFFFFF)), "data"},
+                {"Memory allocation: " .. math.random(12, 64) .. "MB", "info"},
+                {"Thread pool: " .. math.random(4, 12) .. " workers", "system"},
+                {"Cache hit ratio: " .. math.random(85, 99) .. "%", "data"},
+                {"Latency: " .. math.random(5, 20) .. "ms", "info"},
+                {"Packet integrity: OK", "success"},
+                {"Encryption: AES-256-GCM", "system"},
+                {"Certificate: Valid", "success"},
+            }
+            local extra = Utility.randomFromArray(extraLogs)
+            LogConsole.addLog(extra[1], extra[2])
+        end
+        
+        -- Уведомления на ключевых этапах
+        if stage.percent == 32 then
+            NotificationSystem.push("Authentication complete!", "success", 2)
+        elseif stage.percent == 52 then
+            NotificationSystem.push("Core modules downloaded", "info", 2)
+        elseif stage.percent == 80 then
+            NotificationSystem.push("UI framework ready", "info", 1.5)
+        elseif stage.percent == 100 then
+            NotificationSystem.push("All systems GO! 🚀", "special", 2)
+        end
+        
+        -- Случайный глитч
+        if math.random() < 0.08 then
+            AnimationEngine.shake(MainFrame, 2, 0.1)
+            AnimationEngine.glitchText(TitleLabel, "CHIPZTER", 0.2, 0.4)
+        end
+        
+        -- Burst частиц на ключевых моментах
+        if stage.percent % 25 == 0 then
+            ParticleSystem.burst(8, "star", 0.05)
+        end
+        
+        task.wait(stage.delay)
+    end
+    
+    -- Финальный burst
+    ParticleSystem.burst(25, "diamond", 0.03)
+    
+    task.wait(0.3)
+    
+    LogConsole.addLog("═══════════════════════════════", "system")
+    LogConsole.addLog("ALL SYSTEMS OPERATIONAL", "success")
+    LogConsole.addLog("Loading main script...", "success")
+    LogConsole.addLog("═══════════════════════════════", "system")
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 34: ПОСЛЕДОВАТЕЛЬНОСТЬ ИСЧЕЗНОВЕНИЯ (OUTRO SEQUENCE)
+-- ============================================================================
+
+local function playOutroSequence()
+    timerActive = false
+    
+    -- Успешная индикация
+    AnimationEngine.tween(MainStroke, {
+        Color = Config.Theme.Success,
+        Transparency = 0
+    }, 0.4)
+    
+    AnimationEngine.tween(TopNeonLine, {
+        BackgroundColor3 = Config.Theme.Success
+    }, 0.4)
+    
+    topLineGradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(20, 150, 60)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 255, 150)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 150, 60)),
+    })
+    
+    -- Обновление статуса
+    StatusText.Text = "✅ Successfully loaded!"
+    StatusText.TextColor3 = Config.Theme.Success
+    AnimationEngine.glitchText(TitleLabel, "CHIPZTER", 0.3, 0.3)
+    
+    -- Финальные частицы
+    ParticleSystem.burst(30, "star", 0.02)
+    
+    task.wait(1.5)
+    
+    -- Остановка систем
+    ParticleSystem.stop()
+    MatrixRain.stop()
+    
+    -- Анимация сворачивания
+    local fadeElements = {
+        {FooterText, "TextTransparency", 1},
+        {DateTimeLabel, "TextTransparency", 1},
+        {TimerDisplay, "TextTransparency", 1},
+        {pingText, "TextTransparency", 1},
+        {tickerText, "TextTransparency", 1},
+        {StatusText, "TextTransparency", 1},
+        {PercentText, "TextTransparency", 1},
+        {SubtitleLabel, "TextTransparency", 1},
+        {versionText, "TextTransparency", 1},
+    }
+    
+    for _, elem in ipairs(fadeElements) do
+        AnimationEngine.tween(elem[1], {[elem[2]] = elem[3]}, 0.3)
+    end
+    
+    task.wait(0.2)
+    
+    AnimationEngine.tween(TitleLabel, {TextTransparency = 1}, 0.3)
+    AnimationEngine.tween(logConsole, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(infoPanel, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(VersionBadge, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(ProgressBG, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(ProgressFill, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(ProgressGlow, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(TopNeonLine, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(TopNeonGlow, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(BottomNeonLine, {BackgroundTransparency = 1}, 0.3)
+    AnimationEngine.tween(TickerBar, {BackgroundTransparency = 1}, 0.3)
+    
+    task.wait(0.3)
+    
+    -- Финальное сворачивание
+    AnimationEngine.tween(MainFrame, {
+        BackgroundTransparency = 1,
+        Size = UDim2.new(0, Config.GUI.MainWidth * 1.05, 0, (Config.GUI.MainHeight + 60) * 1.05),
+    }, 0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    
+    AnimationEngine.tween(InnerFrame, {BackgroundTransparency = 1}, 0.4)
+    AnimationEngine.tween(MainStroke, {Transparency = 1}, 0.4)
+    AnimationEngine.tween(InnerStroke, {Transparency = 1}, 0.4)
+    AnimationEngine.tween(FullscreenBG, {BackgroundTransparency = 1}, 0.6)
+    
+    task.wait(0.8)
+    
+    -- Очистка
+    Utility.disconnectAll()
+    ScreenGui:Destroy()
+end
+
+-- ============================================================================
+-- СЕКЦИЯ 35: ГЛАВНАЯ ТОЧКА ВХОДА (MAIN ENTRY POINT)
+-- ============================================================================
+
+task.spawn(function()
+    -- Небольшая задержка для инициализации
+    task.wait(0.1)
+    
+    -- Воспроизведение интро
+    playIntroSequence()
+    
+    task.wait(0.5)
+    
+    -- Процесс загрузки
+    playLoadingSequence()
+    
+    task.wait(0.5)
+    
+    -- Анимация исчезновения
+    playOutroSequence()
+    
+    -- Задержка перед запуском основного скрипта
+    task.wait(0.3)
+    
+    -- ╔══════════════════════════════════════════════════════════════╗
+    -- ║         ЗАПУСК ОСНОВНОГО СКРИПТА CHIPZTER GUI              ║
+    -- ╚══════════════════════════════════════════════════════════════╝
+    
+    pcall(function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/Patnx/Chip-zter-Gui/refs/heads/main/ChipzterGui.lua"))()
+    end)
+end)
+
+-- ============================================================================
+-- СЕКЦИЯ 36: ОБРАБОТКА ОШИБОК И БЕЗОПАСНОЕ ЗАВЕРШЕНИЕ
+-- ============================================================================
+
+-- Автоочистка при ошибке
+game:GetService("Players").LocalPlayer.CharacterRemoving:Connect(function()
+    -- Ничего не делаем — ResetOnSpawn = false
+end)
+
+-- Защита от двойного запуска
+if _G.ChipzterLoaderActive then
+    pcall(function() ScreenGui:Destroy() end)
+    return
+end
+_G.ChipzterLoaderActive = true
+
+-- Автоудаление флага после загрузки
+task.delay(30, function()
+    _G.ChipzterLoaderActive = nil
+end)
+
+-- ============================================================================
+-- КОНЕЦ СКРИПТА
+-- Всего элементов создано: 500+
+-- Систем анимации: 12
+-- Визуальных эффектов: 20+
+-- Строк кода: 3000+
+-- ============================================================================

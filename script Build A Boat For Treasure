@@ -1,0 +1,1651 @@
+--[[
+    ╔══════════════════════════════════════════╗
+    ║   Build a Boat for Treasure             ║
+    ║   Premium Script v3.0                   ║
+    ║   Категории • Анимации • 30+ функций    ║
+    ╚══════════════════════════════════════════╝
+]]
+
+-- === СЕРВИСЫ ===
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local Lighting = game:GetService("Lighting")
+local CoreGui = game:GetService("CoreGui")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local rootPart = character:WaitForChild("HumanoidRootPart")
+local camera = workspace.CurrentCamera
+
+player.CharacterAdded:Connect(function(char)
+    character = char
+    humanoid = char:WaitForChild("Humanoid")
+    rootPart = char:WaitForChild("HumanoidRootPart")
+end)
+
+-- === УДАЛИТЬ СТАРЫЙ GUI ===
+if CoreGui:FindFirstChild("BaBFT_Premium") then
+    CoreGui:FindFirstChild("BaBFT_Premium"):Destroy()
+end
+
+-- === ЦВЕТА ТЕМЫ ===
+local Theme = {
+    Background = Color3.fromRGB(18, 18, 28),
+    Surface = Color3.fromRGB(25, 25, 40),
+    Card = Color3.fromRGB(32, 32, 52),
+    CardHover = Color3.fromRGB(42, 42, 65),
+    Accent = Color3.fromRGB(88, 101, 242),      -- Discord-like purple
+    AccentDark = Color3.fromRGB(68, 78, 200),
+    AccentLight = Color3.fromRGB(120, 130, 255),
+    Success = Color3.fromRGB(67, 181, 129),
+    Danger = Color3.fromRGB(237, 66, 69),
+    Warning = Color3.fromRGB(250, 168, 26),
+    Gold = Color3.fromRGB(255, 200, 55),
+    TextPrimary = Color3.fromRGB(255, 255, 255),
+    TextSecondary = Color3.fromRGB(185, 185, 210),
+    TextMuted = Color3.fromRGB(120, 120, 150),
+    Divider = Color3.fromRGB(45, 45, 70),
+    SideBar = Color3.fromRGB(22, 22, 35),
+    Toggle_On = Color3.fromRGB(67, 181, 129),
+    Toggle_Off = Color3.fromRGB(80, 80, 100),
+}
+
+-- === СОСТОЯНИЯ ===
+local States = {
+    flyEnabled = false,
+    noclipEnabled = false,
+    speedEnabled = false,
+    jumpEnabled = false,
+    autoFarmEnabled = false,
+    autoGoldEnabled = false,
+    autoChestEnabled = false,
+    godModeEnabled = false,
+    antiAfkEnabled = false,
+    espEnabled = false,
+    platformEnabled = false,
+    antiFallEnabled = false,
+    infJumpEnabled = false,
+    fpsBoostEnabled = false,
+    autoQuestEnabled = false,
+    xrayEnabled = false,
+    fullbrightEnabled = false,
+    antiSlowEnabled = false,
+}
+
+local flySpeed = 80
+local walkSpeed = 100
+local jumpPower = 150
+local connections = {}
+
+-- ═══════════════════════════════════════
+-- === СОЗДАНИЕ GUI ===
+-- ═══════════════════════════════════════
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "BaBFT_Premium"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = CoreGui
+
+-- === ОСНОВНОЙ ФРЕЙМ ===
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "Main"
+MainFrame.Size = UDim2.new(0, 580, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -290, 0.5, -210)
+MainFrame.BackgroundColor3 = Theme.Background
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+local MainShadow = Instance.new("ImageLabel")
+MainShadow.Name = "Shadow"
+MainShadow.Size = UDim2.new(1, 30, 1, 30)
+MainShadow.Position = UDim2.new(0, -15, 0, -15)
+MainShadow.BackgroundTransparency = 1
+MainShadow.Image = "rbxassetid://6014261993"
+MainShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
+MainShadow.ImageTransparency = 0.4
+MainShadow.ScaleType = Enum.ScaleType.Slice
+MainShadow.SliceCenter = Rect.new(49, 49, 450, 450)
+MainShadow.ZIndex = 0
+MainShadow.Parent = MainFrame
+
+-- Анимация появления
+MainFrame.Size = UDim2.new(0, 0, 0, 0)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+    Size = UDim2.new(0, 580, 0, 420),
+    Position = UDim2.new(0.5, -290, 0.5, -210)
+}):Play()
+
+-- === ВЕРХНЯЯ ПАНЕЛЬ (TITLE BAR) ===
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 45)
+TitleBar.BackgroundColor3 = Theme.Surface
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 12)
+TitleCorner.Parent = TitleBar
+
+-- Убираем скругление снизу
+local TitleFix = Instance.new("Frame")
+TitleFix.Size = UDim2.new(1, 0, 0, 15)
+TitleFix.Position = UDim2.new(0, 0, 1, -15)
+TitleFix.BackgroundColor3 = Theme.Surface
+TitleFix.BorderSizePixel = 0
+TitleFix.Parent = TitleBar
+
+-- Градиент на title bar
+local TitleGradient = Instance.new("UIGradient")
+TitleGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(88, 101, 242)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(120, 80, 220)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(180, 60, 180)),
+}
+TitleGradient.Transparency = NumberSequence.new{
+    NumberSequenceKeypoint.new(0, 0.7),
+    NumberSequenceKeypoint.new(1, 0.95),
+}
+
+-- Логотип/Иконка
+local Logo = Instance.new("TextLabel")
+Logo.Size = UDim2.new(0, 35, 0, 35)
+Logo.Position = UDim2.new(0, 12, 0, 5)
+Logo.BackgroundColor3 = Theme.Accent
+Logo.Text = "⛵"
+Logo.TextSize = 18
+Logo.Font = Enum.Font.GothamBold
+Logo.TextColor3 = Theme.TextPrimary
+Logo.Parent = TitleBar
+
+local LogoCorner = Instance.new("UICorner")
+LogoCorner.CornerRadius = UDim.new(0, 8)
+LogoCorner.Parent = Logo
+
+-- Название
+local TitleText = Instance.new("TextLabel")
+TitleText.Size = UDim2.new(0, 300, 0, 20)
+TitleText.Position = UDim2.new(0, 55, 0, 5)
+TitleText.BackgroundTransparency = 1
+TitleText.Text = "Build a Boat — Premium"
+TitleText.TextColor3 = Theme.TextPrimary
+TitleText.TextSize = 16
+TitleText.Font = Enum.Font.GothamBold
+TitleText.TextXAlignment = Enum.TextXAlignment.Left
+TitleText.Parent = TitleBar
+
+-- Версия
+local VersionText = Instance.new("TextLabel")
+VersionText.Size = UDim2.new(0, 300, 0, 14)
+VersionText.Position = UDim2.new(0, 55, 0, 25)
+VersionText.BackgroundTransparency = 1
+VersionText.Text = "v3.0 • 30+ Functions • by Script Hub"
+VersionText.TextColor3 = Theme.TextMuted
+VersionText.TextSize = 11
+VersionText.Font = Enum.Font.Gotham
+VersionText.TextXAlignment = Enum.TextXAlignment.Left
+VersionText.Parent = TitleBar
+
+-- Кнопки управления окном
+local function makeWindowBtn(text, color, pos)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 28, 0, 28)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.Text = text
+    btn.TextColor3 = Theme.TextPrimary
+    btn.TextSize = 14
+    btn.Font = Enum.Font.GothamBold
+    btn.BorderSizePixel = 0
+    btn.Parent = TitleBar
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    return btn
+end
+
+local CloseBtn = makeWindowBtn("✕", Theme.Danger, UDim2.new(1, -38, 0, 8))
+local MinBtn = makeWindowBtn("─", Theme.Warning, UDim2.new(1, -72, 0, 8))
+
+-- Перетаскивание
+local dragging, dragStart, startPos
+TitleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+TitleBar.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - dragStart
+        MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+-- === БОКОВАЯ ПАНЕЛЬ (SIDEBAR) ===
+local Sidebar = Instance.new("Frame")
+Sidebar.Name = "Sidebar"
+Sidebar.Size = UDim2.new(0, 140, 1, -45)
+Sidebar.Position = UDim2.new(0, 0, 0, 45)
+Sidebar.BackgroundColor3 = Theme.SideBar
+Sidebar.BorderSizePixel = 0
+Sidebar.Parent = MainFrame
+
+-- Линия разделения
+local SidebarLine = Instance.new("Frame")
+SidebarLine.Size = UDim2.new(0, 1, 1, 0)
+SidebarLine.Position = UDim2.new(1, 0, 0, 0)
+SidebarLine.BackgroundColor3 = Theme.Divider
+SidebarLine.BorderSizePixel = 0
+SidebarLine.Parent = Sidebar
+
+local SidebarLayout = Instance.new("UIListLayout")
+SidebarLayout.Padding = UDim.new(0, 2)
+SidebarLayout.Parent = Sidebar
+
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.PaddingTop = UDim.new(0, 8)
+SidebarPadding.PaddingLeft = UDim.new(0, 6)
+SidebarPadding.PaddingRight = UDim.new(0, 6)
+SidebarPadding.Parent = Sidebar
+
+-- === КОНТЕЙНЕР КОНТЕНТА ===
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "Content"
+ContentContainer.Size = UDim2.new(1, -141, 1, -45)
+ContentContainer.Position = UDim2.new(0, 141, 0, 45)
+ContentContainer.BackgroundColor3 = Theme.Background
+ContentContainer.BorderSizePixel = 0
+ContentContainer.ClipsDescendants = true
+ContentContainer.Parent = MainFrame
+
+-- ═══════════════════════════════════════
+-- === СИСТЕМА КАТЕГОРИЙ (TABS) ===
+-- ═══════════════════════════════════════
+
+local categories = {}
+local currentCategory = nil
+
+local categoryInfo = {
+    {name = "Телепорты", icon = "🌍", color = Theme.Accent},
+    {name = "Игрок", icon = "🏃", color = Color3.fromRGB(67, 181, 129)},
+    {name = "Авто-Фарм", icon = "🔄", color = Color3.fromRGB(250, 168, 26)},
+    {name = "Строение", icon = "🧱", color = Color3.fromRGB(220, 100, 60)},
+    {name = "Визуал", icon = "🎨", color = Color3.fromRGB(180, 80, 220)},
+    {name = "Утилиты", icon = "⚙️", color = Color3.fromRGB(100, 180, 220)},
+    {name = "Инфо", icon = "ℹ️", color = Color3.fromRGB(150, 150, 170)},
+}
+
+-- Создание страниц контента
+local pages = {}
+for _, info in ipairs(categoryInfo) do
+    local page = Instance.new("ScrollingFrame")
+    page.Name = info.name
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.ScrollBarThickness = 3
+    page.ScrollBarImageColor3 = Theme.Accent
+    page.BorderSizePixel = 0
+    page.Visible = false
+    page.Parent = ContentContainer
+
+    local padding = Instance.new("UIPadding")
+    padding.PaddingTop = UDim.new(0, 10)
+    padding.PaddingBottom = UDim.new(0, 10)
+    padding.PaddingLeft = UDim.new(0, 12)
+    padding.PaddingRight = UDim.new(0, 12)
+    padding.Parent = page
+
+    local layout = Instance.new("UIListLayout")
+    layout.Padding = UDim.new(0, 8)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.Parent = page
+
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        page.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    end)
+
+    pages[info.name] = page
+end
+
+-- Создание кнопок категорий
+for i, info in ipairs(categoryInfo) do
+    local tabBtn = Instance.new("TextButton")
+    tabBtn.Name = info.name
+    tabBtn.Size = UDim2.new(1, 0, 0, 36)
+    tabBtn.BackgroundColor3 = Theme.SideBar
+    tabBtn.BackgroundTransparency = 1
+    tabBtn.Text = ""
+    tabBtn.BorderSizePixel = 0
+    tabBtn.Parent = Sidebar
+
+    local tabCorner = Instance.new("UICorner")
+    tabCorner.CornerRadius = UDim.new(0, 8)
+    tabCorner.Parent = tabBtn
+
+    -- Индикатор активной вкладки
+    local indicator = Instance.new("Frame")
+    indicator.Name = "Indicator"
+    indicator.Size = UDim2.new(0, 3, 0, 20)
+    indicator.Position = UDim2.new(0, 0, 0.5, -10)
+    indicator.BackgroundColor3 = info.color
+    indicator.BorderSizePixel = 0
+    indicator.Visible = false
+    indicator.Parent = tabBtn
+
+    local indCorner = Instance.new("UICorner")
+    indCorner.CornerRadius = UDim.new(0, 2)
+    indCorner.Parent = indicator
+
+    -- Иконка
+    local tabIcon = Instance.new("TextLabel")
+    tabIcon.Size = UDim2.new(0, 28, 1, 0)
+    tabIcon.Position = UDim2.new(0, 10, 0, 0)
+    tabIcon.BackgroundTransparency = 1
+    tabIcon.Text = info.icon
+    tabIcon.TextSize = 16
+    tabIcon.Font = Enum.Font.GothamBold
+    tabIcon.TextColor3 = Theme.TextSecondary
+    tabIcon.Parent = tabBtn
+
+    -- Текст
+    local tabText = Instance.new("TextLabel")
+    tabText.Size = UDim2.new(1, -45, 1, 0)
+    tabText.Position = UDim2.new(0, 40, 0, 0)
+    tabText.BackgroundTransparency = 1
+    tabText.Text = info.name
+    tabText.TextSize = 12
+    tabText.Font = Enum.Font.GothamSemibold
+    tabText.TextColor3 = Theme.TextSecondary
+    tabText.TextXAlignment = Enum.TextXAlignment.Left
+    tabText.Parent = tabBtn
+
+    categories[info.name] = {
+        button = tabBtn,
+        indicator = indicator,
+        icon = tabIcon,
+        text = tabText,
+        page = pages[info.name],
+        color = info.color
+    }
+
+    tabBtn.MouseButton1Click:Connect(function()
+        -- Деактивировать все
+        for _, cat in pairs(categories) do
+            cat.indicator.Visible = false
+            TweenService:Create(cat.button, TweenInfo.new(0.2), {BackgroundTransparency = 1}):Play()
+            cat.text.TextColor3 = Theme.TextSecondary
+            cat.page.Visible = false
+        end
+
+        -- Активировать выбранную
+        local cat = categories[info.name]
+        cat.indicator.Visible = true
+        TweenService:Create(cat.button, TweenInfo.new(0.2), {BackgroundTransparency = 0.85}):Play()
+        cat.button.BackgroundColor3 = info.color
+        cat.text.TextColor3 = Theme.TextPrimary
+        cat.page.Visible = true
+        currentCategory = info.name
+    end)
+
+    -- Hover эффект
+    tabBtn.MouseEnter:Connect(function()
+        if currentCategory ~= info.name then
+            TweenService:Create(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 0.9}):Play()
+            tabBtn.BackgroundColor3 = Theme.CardHover
+        end
+    end)
+
+    tabBtn.MouseLeave:Connect(function()
+        if currentCategory ~= info.name then
+            TweenService:Create(tabBtn, TweenInfo.new(0.15), {BackgroundTransparency = 1}):Play()
+        end
+    end)
+end
+
+-- ═══════════════════════════════════════
+-- === КОМПОНЕНТЫ UI ===
+-- ═══════════════════════════════════════
+
+-- Заголовок секции
+local function CreateSectionHeader(parent, text)
+    local header = Instance.new("Frame")
+    header.Size = UDim2.new(1, 0, 0, 30)
+    header.BackgroundTransparency = 1
+    header.Parent = parent
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "  " .. text
+    label.TextColor3 = Theme.TextMuted
+    label.TextSize = 11
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = header
+
+    local line = Instance.new("Frame")
+    line.Size = UDim2.new(1, 0, 0, 1)
+    line.Position = UDim2.new(0, 0, 1, -1)
+    line.BackgroundColor3 = Theme.Divider
+    line.BorderSizePixel = 0
+    line.Parent = header
+
+    return header
+end
+
+-- Кнопка действия
+local function CreateActionButton(parent, text, icon, color, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 42)
+    btn.BackgroundColor3 = Theme.Card
+    btn.Text = ""
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = btn
+
+    -- Цветовой индикатор слева
+    local colorBar = Instance.new("Frame")
+    colorBar.Size = UDim2.new(0, 4, 0, 24)
+    colorBar.Position = UDim2.new(0, 8, 0.5, -12)
+    colorBar.BackgroundColor3 = color or Theme.Accent
+    colorBar.BorderSizePixel = 0
+    colorBar.Parent = btn
+
+    local barCorner = Instance.new("UICorner")
+    barCorner.CornerRadius = UDim.new(0, 2)
+    barCorner.Parent = colorBar
+
+    -- Иконка
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 24, 0, 24)
+    iconLabel.Position = UDim2.new(0, 20, 0.5, -12)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon or "▶"
+    iconLabel.TextSize = 16
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextColor3 = Theme.TextPrimary
+    iconLabel.Parent = btn
+
+    -- Текст
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -100, 1, 0)
+    label.Position = UDim2.new(0, 50, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamSemibold
+    label.TextColor3 = Theme.TextPrimary
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = btn
+
+    -- Статус
+    local status = Instance.new("TextLabel")
+    status.Name = "Status"
+    status.Size = UDim2.new(0, 60, 0, 20)
+    status.Position = UDim2.new(1, -70, 0.5, -10)
+    status.BackgroundTransparency = 1
+    status.Text = "►"
+    status.TextSize = 14
+    status.Font = Enum.Font.GothamBold
+    status.TextColor3 = Theme.TextMuted
+    status.Parent = btn
+
+    -- Hover эффект
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.CardHover}):Play()
+    end)
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        -- Эффект нажатия
+        TweenService:Create(btn, TweenInfo.new(0.05), {BackgroundColor3 = color or Theme.Accent}):Play()
+        wait(0.1)
+        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+
+        status.Text = "✓"
+        status.TextColor3 = Theme.Success
+        if callback then callback() end
+        wait(1.5)
+        status.Text = "►"
+        status.TextColor3 = Theme.TextMuted
+    end)
+
+    return btn, status
+end
+
+-- Тогл (переключатель)
+local function CreateToggle(parent, text, icon, stateKey, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 42)
+    frame.BackgroundColor3 = Theme.Card
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    -- Иконка
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 24, 0, 24)
+    iconLabel.Position = UDim2.new(0, 12, 0.5, -12)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon or "◆"
+    iconLabel.TextSize = 16
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextColor3 = Theme.TextPrimary
+    iconLabel.Parent = frame
+
+    -- Текст
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -120, 1, 0)
+    label.Position = UDim2.new(0, 42, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextSize = 13
+    label.Font = Enum.Font.GothamSemibold
+    label.TextColor3 = Theme.TextPrimary
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    -- Toggle switch
+    local toggleBg = Instance.new("TextButton")
+    toggleBg.Size = UDim2.new(0, 44, 0, 22)
+    toggleBg.Position = UDim2.new(1, -56, 0.5, -11)
+    toggleBg.BackgroundColor3 = Theme.Toggle_Off
+    toggleBg.Text = ""
+    toggleBg.BorderSizePixel = 0
+    toggleBg.AutoButtonColor = false
+    toggleBg.Parent = frame
+
+    local toggleCorner = Instance.new("UICorner")
+    toggleCorner.CornerRadius = UDim.new(1, 0)
+    toggleCorner.Parent = toggleBg
+
+    local circle = Instance.new("Frame")
+    circle.Size = UDim2.new(0, 18, 0, 18)
+    circle.Position = UDim2.new(0, 2, 0.5, -9)
+    circle.BackgroundColor3 = Theme.TextPrimary
+    circle.BorderSizePixel = 0
+    circle.Parent = toggleBg
+
+    local circleCorner = Instance.new("UICorner")
+    circleCorner.CornerRadius = UDim.new(1, 0)
+    circleCorner.Parent = circle
+
+    -- Статус текст
+    local statusText = Instance.new("TextLabel")
+    statusText.Size = UDim2.new(0, 35, 0, 14)
+    statusText.Position = UDim2.new(1, -58, 0, 1)
+    statusText.BackgroundTransparency = 1
+    statusText.Text = "OFF"
+    statusText.TextSize = 9
+    statusText.Font = Enum.Font.GothamBold
+    statusText.TextColor3 = Theme.TextMuted
+    statusText.Visible = false
+    statusText.Parent = frame
+
+    local function updateToggle(state)
+        if state then
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Toggle_On}):Play()
+            TweenService:Create(circle, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Position = UDim2.new(0, 24, 0.5, -9)}):Play()
+        else
+            TweenService:Create(toggleBg, TweenInfo.new(0.2), {BackgroundColor3 = Theme.Toggle_Off}):Play()
+            TweenService:Create(circle, TweenInfo.new(0.2, Enum.EasingStyle.Back), {Position = UDim2.new(0, 2, 0.5, -9)}):Play()
+        end
+    end
+
+    toggleBg.MouseButton1Click:Connect(function()
+        States[stateKey] = not States[stateKey]
+        updateToggle(States[stateKey])
+        if callback then callback(States[stateKey]) end
+    end)
+
+    -- Hover
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundColor3 = Theme.CardHover}):Play()
+        end
+    end)
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+        end
+    end)
+
+    return frame, updateToggle
+end
+
+-- Слайдер
+local function CreateSlider(parent, text, icon, min, max, default, callback)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(1, 0, 0, 58)
+    frame.BackgroundColor3 = Theme.Card
+    frame.BorderSizePixel = 0
+    frame.Parent = parent
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    -- Иконка
+    local iconLabel = Instance.new("TextLabel")
+    iconLabel.Size = UDim2.new(0, 24, 0, 24)
+    iconLabel.Position = UDim2.new(0, 12, 0, 6)
+    iconLabel.BackgroundTransparency = 1
+    iconLabel.Text = icon or "◆"
+    iconLabel.TextSize = 14
+    iconLabel.Font = Enum.Font.GothamBold
+    iconLabel.TextColor3 = Theme.TextPrimary
+    iconLabel.Parent = frame
+
+    -- Текст
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -100, 0, 24)
+    label.Position = UDim2.new(0, 40, 0, 4)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextSize = 12
+    label.Font = Enum.Font.GothamSemibold
+    label.TextColor3 = Theme.TextPrimary
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = frame
+
+    -- Значение
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Size = UDim2.new(0, 50, 0, 24)
+    valueLabel.Position = UDim2.new(1, -60, 0, 4)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = tostring(default)
+    valueLabel.TextSize = 13
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextColor3 = Theme.Accent
+    valueLabel.Parent = frame
+
+    -- Slider track
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(1, -30, 0, 6)
+    track.Position = UDim2.new(0, 15, 0, 38)
+    track.BackgroundColor3 = Theme.Toggle_Off
+    track.BorderSizePixel = 0
+    track.Parent = frame
+
+    local trackCorner = Instance.new("UICorner")
+    trackCorner.CornerRadius = UDim.new(1, 0)
+    trackCorner.Parent = track
+
+    -- Fill
+    local fill = Instance.new("Frame")
+    fill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
+    fill.BackgroundColor3 = Theme.Accent
+    fill.BorderSizePixel = 0
+    fill.Parent = track
+
+    local fillCorner = Instance.new("UICorner")
+    fillCorner.CornerRadius = UDim.new(1, 0)
+    fillCorner.Parent = fill
+
+    -- Knob
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new((default - min) / (max - min), -8, 0.5, -8)
+    knob.BackgroundColor3 = Theme.TextPrimary
+    knob.BorderSizePixel = 0
+    knob.ZIndex = 2
+    knob.Parent = track
+
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    knobCorner.Parent = knob
+
+    -- Slider logic
+    local sliding = false
+
+    track.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            sliding = true
+        end
+    end)
+
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            sliding = false
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if sliding and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local trackPos = track.AbsolutePosition.X
+            local trackSize = track.AbsoluteSize.X
+            local relativeX = math.clamp((input.Position.X - trackPos) / trackSize, 0, 1)
+            local value = math.floor(min + (max - min) * relativeX)
+
+            fill.Size = UDim2.new(relativeX, 0, 1, 0)
+            knob.Position = UDim2.new(relativeX, -8, 0.5, -8)
+            valueLabel.Text = tostring(value)
+
+            if callback then callback(value) end
+        end
+    end)
+
+    -- Hover
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundColor3 = Theme.CardHover}):Play()
+        end
+    end)
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            TweenService:Create(frame, TweenInfo.new(0.15), {BackgroundColor3 = Theme.Card}):Play()
+        end
+    end)
+
+    return frame
+end
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 1: ТЕЛЕПОРТЫ ===
+-- ═══════════════════════════════════════
+local teleportPage = pages["Телепорты"]
+
+CreateSectionHeader(teleportPage, "🗺️ ОСНОВНЫЕ ЛОКАЦИИ")
+
+CreateActionButton(teleportPage, "Сокровище (Treasure)", "💰", Theme.Gold, function()
+    if rootPart then rootPart.CFrame = CFrame.new(1072, 28, -4) end
+end)
+
+CreateActionButton(teleportPage, "Зона золота (Gold Zone)", "🏆", Theme.Gold, function()
+    if rootPart then rootPart.CFrame = CFrame.new(1058, 18, 0) end
+end)
+
+CreateActionButton(teleportPage, "Вернуться на старт", "🏠", Theme.Success, function()
+    if rootPart then rootPart.CFrame = CFrame.new(-68, 25, -2) end
+end)
+
+CreateActionButton(teleportPage, "Зона строительства", "🔨", Color3.fromRGB(180, 120, 60), function()
+    if rootPart then rootPart.CFrame = CFrame.new(-30, 25, -2) end
+end)
+
+CreateSectionHeader(teleportPage, "🌊 ЭТАПЫ КАРТЫ")
+
+CreateActionButton(teleportPage, "Начало реки", "🚀", Theme.Accent, function()
+    if rootPart then rootPart.CFrame = CFrame.new(55, 15, -3) end
+end)
+
+CreateActionButton(teleportPage, "Середина пути", "⛵", Color3.fromRGB(60, 150, 200), function()
+    if rootPart then rootPart.CFrame = CFrame.new(500, 20, -3) end
+end)
+
+CreateActionButton(teleportPage, "Водопад", "💧", Color3.fromRGB(40, 120, 220), function()
+    if rootPart then rootPart.CFrame = CFrame.new(750, 30, -3) end
+end)
+
+CreateActionButton(teleportPage, "Перед финишем", "🏁", Theme.Warning, function()
+    if rootPart then rootPart.CFrame = CFrame.new(950, 25, -3) end
+end)
+
+CreateSectionHeader(teleportPage, "👥 ТЕЛЕПОРТ К ИГРОКАМ")
+
+CreateActionButton(teleportPage, "К ближайшему игроку", "👤", Color3.fromRGB(100, 200, 100), function()
+    local closestDist = math.huge
+    local closestPlayer = nil
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local dist = (p.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
+            if dist < closestDist then
+                closestDist = dist
+                closestPlayer = p
+            end
+        end
+    end
+    if closestPlayer and closestPlayer.Character then
+        rootPart.CFrame = closestPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+    end
+end)
+
+CreateActionButton(teleportPage, "К случайному игроку", "🎲", Color3.fromRGB(200, 100, 200), function()
+    local plrs = Players:GetPlayers()
+    local others = {}
+    for _, p in pairs(plrs) do
+        if p ~= player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            table.insert(others, p)
+        end
+    end
+    if #others > 0 then
+        local target = others[math.random(1, #others)]
+        rootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 5)
+    end
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 2: ИГРОК ===
+-- ═══════════════════════════════════════
+local playerPage = pages["Игрок"]
+
+CreateSectionHeader(playerPage, "⚡ СКОРОСТЬ И ПРЫЖОК")
+
+CreateSlider(playerPage, "Скорость ходьбы", "🏃", 16, 300, 16, function(val)
+    walkSpeed = val
+    if humanoid then humanoid.WalkSpeed = val end
+end)
+
+CreateSlider(playerPage, "Сила прыжка", "🦘", 50, 400, 50, function(val)
+    jumpPower = val
+    if humanoid then humanoid.JumpPower = val end
+end)
+
+CreateSectionHeader(playerPage, "🕊️ ПЕРЕМЕЩЕНИЕ")
+
+-- FLY
+CreateToggle(playerPage, "Полёт (WASD + Space/Ctrl)", "🕊️", "flyEnabled", function(state)
+    if state then
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "FlyVelocity"
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Velocity = Vector3.new(0, 0, 0)
+        bv.Parent = rootPart
+
+        local bg = Instance.new("BodyGyro")
+        bg.Name = "FlyGyro"
+        bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bg.P = 10000
+        bg.Parent = rootPart
+
+        local keys = {}
+        connections["flyInput1"] = UserInputService.InputBegan:Connect(function(input, gpe)
+            if gpe then return end
+            keys[input.KeyCode] = true
+        end)
+        connections["flyInput2"] = UserInputService.InputEnded:Connect(function(input)
+            keys[input.KeyCode] = false
+        end)
+        connections["flyLoop"] = RunService.RenderStepped:Connect(function()
+            if not States.flyEnabled then return end
+            local dir = Vector3.new(0, 0, 0)
+            local cf = camera.CFrame
+            if keys[Enum.KeyCode.W] then dir = dir + cf.LookVector end
+            if keys[Enum.KeyCode.S] then dir = dir - cf.LookVector end
+            if keys[Enum.KeyCode.A] then dir = dir - cf.RightVector end
+            if keys[Enum.KeyCode.D] then dir = dir + cf.RightVector end
+            if keys[Enum.KeyCode.Space] then dir = dir + Vector3.new(0, 1, 0) end
+            if keys[Enum.KeyCode.LeftControl] or keys[Enum.KeyCode.LeftShift] then dir = dir - Vector3.new(0, 1, 0) end
+            bv.Velocity = dir.Magnitude > 0 and dir.Unit * flySpeed or Vector3.zero
+            bg.CFrame = cf
+        end)
+    else
+        for _, name in pairs({"flyInput1", "flyInput2", "flyLoop"}) do
+            if connections[name] then connections[name]:Disconnect() end
+        end
+        local bv = rootPart:FindFirstChild("FlyVelocity")
+        local bg = rootPart:FindFirstChild("FlyGyro")
+        if bv then bv:Destroy() end
+        if bg then bg:Destroy() end
+    end
+end)
+
+CreateSlider(playerPage, "Скорость полёта", "✈️", 20, 300, 80, function(val)
+    flySpeed = val
+end)
+
+-- NOCLIP
+CreateToggle(playerPage, "Noclip (сквозь стены)", "👻", "noclipEnabled", function(state)
+    if state then
+        connections["noclip"] = RunService.Stepped:Connect(function()
+            if States.noclipEnabled and character then
+                for _, part in pairs(character:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end)
+    else
+        if connections["noclip"] then connections["noclip"]:Disconnect() end
+    end
+end)
+
+-- INFINITE JUMP
+CreateToggle(playerPage, "Бесконечный прыжок", "♾️", "infJumpEnabled", function(state)
+    if state then
+        connections["infJump"] = UserInputService.JumpRequest:Connect(function()
+            if States.infJumpEnabled and humanoid then
+                humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    else
+        if connections["infJump"] then connections["infJump"]:Disconnect() end
+    end
+end)
+
+CreateSectionHeader(playerPage, "🛡️ ЗАЩИТА")
+
+-- GOD MODE
+CreateToggle(playerPage, "Режим бога (God Mode)", "🛡️", "godModeEnabled", function(state)
+    if state then
+        connections["godMode"] = RunService.Heartbeat:Connect(function()
+            if States.godModeEnabled and humanoid then
+                humanoid.Health = humanoid.MaxHealth
+            end
+        end)
+    else
+        if connections["godMode"] then connections["godMode"]:Disconnect() end
+    end
+end)
+
+-- ANTI-FALL
+CreateToggle(playerPage, "Анти-падение", "🪂", "antiFallEnabled", function(state)
+    if state then
+        connections["antiFall"] = RunService.Heartbeat:Connect(function()
+            if States.antiFallEnabled and rootPart and rootPart.Position.Y < -50 then
+                rootPart.CFrame = CFrame.new(rootPart.Position.X, 100, rootPart.Position.Z)
+            end
+        end)
+    else
+        if connections["antiFall"] then connections["antiFall"]:Disconnect() end
+    end
+end)
+
+-- ANTI-SLOW
+CreateToggle(playerPage, "Анти-замедление", "🚫", "antiSlowEnabled", function(state)
+    if state then
+        connections["antiSlow"] = RunService.Heartbeat:Connect(function()
+            if States.antiSlowEnabled and humanoid then
+                if humanoid.WalkSpeed < walkSpeed then
+                    humanoid.WalkSpeed = walkSpeed
+                end
+            end
+        end)
+    else
+        if connections["antiSlow"] then connections["antiSlow"]:Disconnect() end
+    end
+end)
+
+-- PLATFORM
+CreateToggle(playerPage, "Платформа под ногами", "🟦", "platformEnabled", function(state)
+    if state then
+        local platform = Instance.new("Part")
+        platform.Name = "PlayerPlatform"
+        platform.Size = Vector3.new(10, 1, 10)
+        platform.Anchored = true
+        platform.CanCollide = true
+        platform.Transparency = 0.5
+        platform.BrickColor = BrickColor.new("Bright blue")
+        platform.Material = Enum.Material.Neon
+        platform.Parent = workspace
+
+        connections["platform"] = RunService.Heartbeat:Connect(function()
+            if States.platformEnabled and rootPart then
+                platform.CFrame = CFrame.new(rootPart.Position.X, rootPart.Position.Y - 3.5, rootPart.Position.Z)
+            end
+        end)
+    else
+        if connections["platform"] then connections["platform"]:Disconnect() end
+        local p = workspace:FindFirstChild("PlayerPlatform")
+        if p then p:Destroy() end
+    end
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 3: АВТО-ФАРМ ===
+-- ═══════════════════════════════════════
+local farmPage = pages["Авто-Фарм"]
+
+CreateSectionHeader(farmPage, "💰 АВТОМАТИЧЕСКИЙ ФАРМИНГ")
+
+CreateToggle(farmPage, "Авто-фарм золота (TP Loop)", "💰", "autoGoldEnabled", function(state)
+    if state then
+        spawn(function()
+            while States.autoGoldEnabled do
+                pcall(function()
+                    if rootPart then
+                        rootPart.CFrame = CFrame.new(1072, 28, -4)
+                    end
+                    wait(1)
+                    -- Сбор через TouchTransmitter
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if v:IsA("TouchTransmitter") and v.Parent and v.Parent:IsA("BasePart") then
+                            pcall(function()
+                                firetouchinterest(rootPart, v.Parent, 0)
+                                wait(0.05)
+                                firetouchinterest(rootPart, v.Parent, 1)
+                            end)
+                        end
+                    end
+                    wait(1)
+                    -- Возврат на старт
+                    rootPart.CFrame = CFrame.new(-68, 25, -2)
+                    wait(3)
+                end)
+                wait(0.5)
+            end
+        end)
+    end
+end)
+
+CreateToggle(farmPage, "Авто-сбор сундуков", "📦", "autoChestEnabled", function(state)
+    if state then
+        spawn(function()
+            while States.autoChestEnabled do
+                pcall(function()
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if (v.Name:lower():find("chest") or v.Name:lower():find("loot") or v.Name:lower():find("reward")) then
+                            if v:IsA("BasePart") and rootPart then
+                                rootPart.CFrame = v.CFrame
+                                wait(0.3)
+                                if v:FindFirstChild("TouchInterest") or v:FindFirstChildWhichIsA("TouchTransmitter") then
+                                    pcall(function()
+                                        firetouchinterest(rootPart, v, 0)
+                                        wait(0.1)
+                                        firetouchinterest(rootPart, v, 1)
+                                    end)
+                                end
+                            end
+                        end
+                    end
+                end)
+                wait(2)
+            end
+        end)
+    end
+end)
+
+CreateToggle(farmPage, "Авто-квест", "📜", "autoQuestEnabled", function(state)
+    if state then
+        spawn(function()
+            while States.autoQuestEnabled do
+                pcall(function()
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if v.Name:lower():find("quest") and v:IsA("BasePart") then
+                            rootPart.CFrame = v.CFrame
+                            wait(0.5)
+                        end
+                    end
+                end)
+                wait(3)
+            end
+        end)
+    end
+end)
+
+CreateSectionHeader(farmPage, "🔁 БЫСТРЫЕ ДЕЙСТВИЯ")
+
+CreateActionButton(farmPage, "Собрать всё золото рядом", "🪙", Theme.Gold, function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if (v.Name:lower():find("gold") or v.Name:lower():find("coin") or v.Name:lower():find("money")) and v:IsA("BasePart") then
+                rootPart.CFrame = v.CFrame
+                wait(0.1)
+                pcall(function()
+                    firetouchinterest(rootPart, v, 0)
+                    wait(0.05)
+                    firetouchinterest(rootPart, v, 1)
+                end)
+            end
+        end
+    end)
+end)
+
+CreateActionButton(farmPage, "Собрать все предметы", "🎁", Color3.fromRGB(200, 80, 200), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("TouchTransmitter") and v.Parent and v.Parent:IsA("BasePart") then
+                local dist = (v.Parent.Position - rootPart.Position).Magnitude
+                if dist < 500 then
+                    pcall(function()
+                        firetouchinterest(rootPart, v.Parent, 0)
+                        wait(0.05)
+                        firetouchinterest(rootPart, v.Parent, 1)
+                    end)
+                end
+            end
+        end
+    end)
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 4: СТРОЕНИЕ ===
+-- ═══════════════════════════════════════
+local buildPage = pages["Строение"]
+
+CreateSectionHeader(buildPage, "🧱 БЛОКИ И СТРОИТЕЛЬСТВО")
+
+CreateActionButton(buildPage, "Дублировать блоки (Backpack)", "📋", Color3.fromRGB(100, 50, 150), function()
+    pcall(function()
+        for _, tool in pairs(player.Backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                local clone = tool:Clone()
+                clone.Parent = player.Backpack
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Удалить свою лодку", "🗑️", Theme.Danger, function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Model") and v.Name == player.Name .. "'s Boat" then
+                v:Destroy()
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Якорить все блоки лодки", "⚓", Color3.fromRGB(60, 100, 200), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                v.Anchored = true
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Разъякорить лодку", "🔓", Color3.fromRGB(200, 150, 50), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                v.Anchored = false
+            end
+        end
+    end)
+end)
+
+CreateSectionHeader(buildPage, "🔧 МОДИФИКАЦИИ ЛОДКИ")
+
+CreateActionButton(buildPage, "Увеличить все блоки x2", "📐", Color3.fromRGB(100, 180, 100), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                v.Size = v.Size * 2
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Сделать блоки неоновыми", "✨", Color3.fromRGB(200, 50, 255), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                v.Material = Enum.Material.Neon
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Невидимая лодка", "🫥", Color3.fromRGB(150, 150, 150), function()
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                v.Transparency = 0.8
+            end
+        end
+    end)
+end)
+
+CreateActionButton(buildPage, "Радужная лодка 🌈", "🌈", Color3.fromRGB(255, 100, 100), function()
+    pcall(function()
+        spawn(function()
+            local hue = 0
+            for i = 1, 100 do
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("BasePart") and v.Parent and v.Parent.Name:find(player.Name) then
+                        hue = (hue + 0.01) % 1
+                        v.Color = Color3.fromHSV(hue, 1, 1)
+                        v.Material = Enum.Material.Neon
+                    end
+                end
+                wait(0.1)
+            end
+        end)
+    end)
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 5: ВИЗУАЛ ===
+-- ═══════════════════════════════════════
+local visualPage = pages["Визуал"]
+
+CreateSectionHeader(visualPage, "👁️ ВИДИМОСТЬ")
+
+-- ESP
+CreateToggle(visualPage, "ESP Игроков (имена)", "👁️", "espEnabled", function(state)
+    if state then
+        spawn(function()
+            while States.espEnabled do
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= player and p.Character and p.Character:FindFirstChild("Head") then
+                        if not p.Character.Head:FindFirstChild("ESP_Billboard") then
+                            local bb = Instance.new("BillboardGui")
+                            bb.Name = "ESP_Billboard"
+                            bb.Size = UDim2.new(0, 200, 0, 50)
+                            bb.StudsOffset = Vector3.new(0, 3, 0)
+                            bb.AlwaysOnTop = true
+                            bb.Parent = p.Character.Head
+
+                            local nameLabel = Instance.new("TextLabel")
+                            nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                            nameLabel.BackgroundTransparency = 1
+                            nameLabel.Text = p.Name
+                            nameLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                            nameLabel.TextSize = 14
+                            nameLabel.Font = Enum.Font.GothamBold
+                            nameLabel.TextStrokeTransparency = 0.5
+                            nameLabel.Parent = bb
+
+                            local distLabel = Instance.new("TextLabel")
+                            distLabel.Size = UDim2.new(1, 0, 0.5, 0)
+                            distLabel.Position = UDim2.new(0, 0, 0.5, 0)
+                            distLabel.BackgroundTransparency = 1
+                            distLabel.TextColor3 = Color3.fromRGB(255, 255, 100)
+                            distLabel.TextSize = 11
+                            distLabel.Font = Enum.Font.Gotham
+                            distLabel.TextStrokeTransparency = 0.5
+                            distLabel.Parent = bb
+
+                            -- Highlight
+                            local hl = Instance.new("Highlight")
+                            hl.Name = "ESP_Highlight"
+                            hl.FillColor = Color3.fromRGB(255, 50, 50)
+                            hl.FillTransparency = 0.7
+                            hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+                            hl.OutlineTransparency = 0.3
+                            hl.Parent = p.Character
+                        end
+                        -- Обновляем дистанцию
+                        local bb = p.Character.Head:FindFirstChild("ESP_Billboard")
+                        if bb then
+                            local distLabel = bb:FindFirstChildWhichIsA("TextLabel", true)
+                            if distLabel and distLabel.Position == UDim2.new(0, 0, 0.5, 0) then
+                                local dist = math.floor((p.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude)
+                                distLabel.Text = "📏 " .. dist .. " studs"
+                            end
+                        end
+                    end
+                end
+                wait(0.5)
+            end
+            -- Удалить ESP
+            for _, p in pairs(Players:GetPlayers()) do
+                if p.Character then
+                    local head = p.Character:FindFirstChild("Head")
+                    if head then
+                        local bb = head:FindFirstChild("ESP_Billboard")
+                        if bb then bb:Destroy() end
+                    end
+                    local hl = p.Character:FindFirstChild("ESP_Highlight")
+                    if hl then hl:Destroy() end
+                end
+            end
+        end)
+    end
+end)
+
+-- X-RAY
+CreateToggle(visualPage, "X-Ray (прозрачные стены)", "🔍", "xrayEnabled", function(state)
+    pcall(function()
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") and v.Transparency == 0 and not v:IsDescendantOf(character) then
+                if state then
+                    v.Transparency = 0.7
+                else
+                    v.Transparency = 0
+                end
+            end
+        end
+    end)
+end)
+
+CreateSectionHeader(visualPage, "🌤️ ОСВЕЩЕНИЕ")
+
+-- FULLBRIGHT
+CreateToggle(visualPage, "Fullbright (полный свет)", "☀️", "fullbrightEnabled", function(state)
+    if state then
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 12
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        for _, v in pairs(Lighting:GetDescendants()) do
+            if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") then
+                v.Enabled = false
+            end
+        end
+    else
+        Lighting.Brightness = 1
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 10000
+        Lighting.GlobalShadows = true
+        for _, v in pairs(Lighting:GetDescendants()) do
+            if v:IsA("BlurEffect") or v:IsA("SunRaysEffect") or v:IsA("ColorCorrectionEffect") then
+                v.Enabled = true
+            end
+        end
+    end
+end)
+
+CreateActionButton(visualPage, "Установить день", "🌞", Color3.fromRGB(255, 200, 50), function()
+    Lighting.ClockTime = 12
+end)
+
+CreateActionButton(visualPage, "Установить ночь", "🌙", Color3.fromRGB(40, 40, 100), function()
+    Lighting.ClockTime = 0
+end)
+
+CreateActionButton(visualPage, "Закат", "🌅", Color3.fromRGB(255, 120, 50), function()
+    Lighting.ClockTime = 18
+end)
+
+CreateSectionHeader(visualPage, "📸 КАМЕРА")
+
+CreateSlider(visualPage, "Field of View (FOV)", "📷", 30, 120, 70, function(val)
+    camera.FieldOfView = val
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 6: УТИЛИТЫ ===
+-- ═══════════════════════════════════════
+local utilsPage = pages["Утилиты"]
+
+CreateSectionHeader(utilsPage, "🛠️ СИСТЕМНЫЕ")
+
+-- ANTI-AFK
+CreateToggle(utilsPage, "Анти-AFK (не кикнет)", "🔄", "antiAfkEnabled", function(state)
+    if state then
+        -- Отключаем idle
+        local vu = game:GetService("VirtualUser")
+        connections["antiAfk"] = player.Idled:Connect(function()
+            vu:CaptureController()
+            vu:ClickButton2(Vector2.new())
+        end)
+    else
+        if connections["antiAfk"] then connections["antiAfk"]:Disconnect() end
+    end
+end)
+
+-- FPS BOOST
+CreateToggle(utilsPage, "FPS Boost (убрать лишнее)", "🖥️", "fpsBoostEnabled", function(state)
+    if state then
+        pcall(function()
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Decal") or v:IsA("Texture") then
+                    v.Transparency = 1
+                end
+                if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+                    v.Enabled = false
+                end
+            end
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            Lighting.GlobalShadows = false
+            Lighting.FogEnd = 9e9
+        end)
+    else
+        pcall(function()
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+            Lighting.GlobalShadows = true
+        end)
+    end
+end)
+
+CreateSectionHeader(utilsPage, "🎯 БЫСТРЫЕ ДЕЙСТВИЯ")
+
+CreateActionButton(utilsPage, "Респавн персонажа", "💀", Theme.Danger, function()
+    if humanoid then humanoid.Health = 0 end
+end)
+
+CreateActionButton(utilsPage, "Сбросить скорость", "⏹️", Color3.fromRGB(150, 150, 150), function()
+    if humanoid then
+        humanoid.WalkSpeed = 16
+        humanoid.JumpPower = 50
+        walkSpeed = 16
+        jumpPower = 50
+    end
+end)
+
+CreateActionButton(utilsPage, "Скопировать позицию", "📍", Theme.Accent, function()
+    if rootPart then
+        local pos = rootPart.Position
+        local text = string.format("CFrame.new(%.1f, %.1f, %.1f)", pos.X, pos.Y, pos.Z)
+        pcall(function()
+            setclipboard(text)
+        end)
+    end
+end)
+
+CreateActionButton(utilsPage, "Реджоин сервер", "🔁", Color3.fromRGB(255, 150, 50), function()
+    pcall(function()
+        game:GetService("TeleportService"):Teleport(game.PlaceId, player)
+    end)
+end)
+
+CreateActionButton(utilsPage, "Список игроков в консоль", "📋", Color3.fromRGB(100, 150, 200), function()
+    print("=== ИГРОКИ НА СЕРВЕРЕ ===")
+    for _, p in pairs(Players:GetPlayers()) do
+        local pos = "N/A"
+        if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            local rp = p.Character.HumanoidRootPart.Position
+            pos = string.format("(%.0f, %.0f, %.0f)", rp.X, rp.Y, rp.Z)
+        end
+        print(p.Name .. " | " .. p.DisplayName .. " | Позиция: " .. pos)
+    end
+    print("=========================")
+end)
+
+CreateSectionHeader(utilsPage, "🎮 ПРОЧЕЕ")
+
+CreateActionButton(utilsPage, "Удалить все звуки", "🔇", Color3.fromRGB(120, 120, 120), function()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("Sound") then
+            v.Volume = 0
+        end
+    end
+end)
+
+CreateActionButton(utilsPage, "Убрать туман", "🌫️", Color3.fromRGB(180, 180, 200), function()
+    Lighting.FogEnd = 1000000
+    Lighting.FogStart = 1000000
+end)
+
+-- ═══════════════════════════════════════
+-- === КАТЕГОРИЯ 7: ИНФО ===
+-- ═══════════════════════════════════════
+local infoPage = pages["Инфо"]
+
+CreateSectionHeader(infoPage, "📊 ИНФОРМАЦИЯ")
+
+-- Инфо-карточка
+local function CreateInfoCard(parent, title, getValue)
+    local card = Instance.new("Frame")
+    card.Size = UDim2.new(1, 0, 0, 50)
+    card.BackgroundColor3 = Theme.Card
+    card.BorderSizePixel = 0
+    card.Parent = parent
+
+    local cardCorner = Instance.new("UICorner")
+    cardCorner.CornerRadius = UDim.new(0, 8)
+    cardCorner.Parent = card
+
+    local titleLabel = Instance.new("TextLabel")
+    titleLabel.Size = UDim2.new(0.5, 0, 1, 0)
+    titleLabel.Position = UDim2.new(0, 15, 0, 0)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Text = title
+    titleLabel.TextColor3 = Theme.TextSecondary
+    titleLabel.TextSize = 12
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Parent = card
+
+    local valueLabel = Instance.new("TextLabel")
+    valueLabel.Name = "Value"
+    valueLabel.Size = UDim2.new(0.5, -15, 1, 0)
+    valueLabel.Position = UDim2.new(0.5, 0, 0, 0)
+    valueLabel.BackgroundTransparency = 1
+    valueLabel.Text = getValue()
+    valueLabel.TextColor3 = Theme.Accent
+    valueLabel.TextSize = 13
+    valueLabel.Font = Enum.Font.GothamBold
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
+    valueLabel.Parent = card
+
+    return valueLabel
+end
+
+local playerNameValue = CreateInfoCard(infoPage, "👤 Игрок:", function() return player.Name end)
+local displayNameValue = CreateInfoCard(infoPage, "🏷️ Ник:", function() return player.DisplayName end)
+local healthValue = CreateInfoCard(infoPage, "❤️ Здоровье:", function() return humanoid and math.floor(humanoid.Health) .. "/" .. humanoid.MaxHealth or "N/A" end)
+local speedValue = CreateInfoCard(infoPage, "⚡ Скорость:", function() return humanoid and tostring(humanoid.WalkSpeed) or "N/A" end)
+local posValue = CreateInfoCard(infoPage, "📍 Позиция:", function()
+    if rootPart then
+        return string.format("%.0f, %.0f, %.0f", rootPart.Position.X, rootPart.Position.Y, rootPart.Position.Z)
+    end
+    return "N/A"
+end)
+local playersValue = CreateInfoCard(infoPage, "👥 Игроков:", function() return tostring(#Players:GetPlayers()) .. "/" .. Players.MaxPlayers end)
+local fpsValue = CreateInfoCard(infoPage, "🖥️ FPS:", function() return "..." end)
+
+-- Обновление инфо
+spawn(function()
+    while ScreenGui.Parent do
+        pcall(function()
+            healthValue.Text = humanoid and math.floor(humanoid.Health) .. "/" .. humanoid.MaxHealth or "N/A"
+            speedValue.Text = humanoid and tostring(math.floor(humanoid.WalkSpeed)) or "N/A"
+            if rootPart then
+                posValue.Text = string.format("%.0f, %.0f, %.0f", rootPart.Position.X, rootPart.Position.Y, rootPart.Position.Z)
+            end
+            playersValue.Text = tostring(#Players:GetPlayers()) .. "/" .. Players.MaxPlayers
+            fpsValue.Text = tostring(math.floor(1 / RunService.RenderStepped:Wait()))
+        end)
+        wait(0.5)
+    end
+end)
+
+CreateSectionHeader(infoPage, "⌨️ ГОРЯЧИЕ КЛАВИШИ")
+
+local function CreateInfoText(parent, text)
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 0, 25)
+    label.BackgroundTransparency = 1
+    label.Text = "  " .. text
+    label.TextColor3 = Theme.TextSecondary
+    label.TextSize = 12
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = parent
+    return label
+end
+
+CreateInfoText(infoPage, "🔑 Right Shift — Показать/Скрыть GUI")
+CreateInfoText(infoPage, "🕊️ Полёт: WASD + Space/Ctrl")
+CreateInfoText(infoPage, "📍 Позиции могут меняться с обновлениями")
+
+CreateSectionHeader(infoPage, "📝 О СКРИПТЕ")
+CreateInfoText(infoPage, "⛵ Build a Boat Premium v3.0")
+CreateInfoText(infoPage, "🔧 30+ функций в 7 категориях")
+CreateInfoText(infoPage, "⚠️ Только для образовательных целей!")
+
+-- ═══════════════════════════════════════
+-- === КНОПКИ УПРАВЛЕНИЯ ОКНОМ ===
+-- ═══════════════════════════════════════
+
+-- Закрытие
+CloseBtn.MouseButton1Click:Connect(function()
+    TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
+        Size = UDim2.new(0, 0, 0, 0),
+        Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+    wait(0.35)
+
+    -- Очистка
+    for _, conn in pairs(connections) do
+        pcall(function() conn:Disconnect() end)
+    end
+    States = {}
+    ScreenGui:Destroy()
+end)
+
+-- Сворачивание
+local minimized = false
+MinBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 580, 0, 45)
+        }):Play()
+        Sidebar.Visible = false
+        ContentContainer.Visible = false
+        MinBtn.Text = "□"
+    else
+        TweenService:Create(MainFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quart), {
+            Size = UDim2.new(0, 580, 0, 420)
+        }):Play()
+        wait(0.15)
+        Sidebar.Visible = true
+        ContentContainer.Visible = true
+        MinBtn.Text = "─"
+    end
+end)
+
+-- ═══════════════════════════════════════
+-- === ГОРЯЧАЯ КЛАВИША (Toggle GUI) ===
+-- ═══════════════════════════════════════
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        MainFrame.Visible = not MainFrame.Visible
+    end
+end)
+
+-- ═══════════════════════════════════════
+-- === АКТИВАЦИЯ ПЕРВОЙ ВКЛАДКИ ===
+-- ═══════════════════════════════════════
+local firstCat = categories["Телепорты"]
+firstCat.indicator.Visible = true
+firstCat.button.BackgroundTransparency = 0.85
+firstCat.button.BackgroundColor3 = categoryInfo[1].color
+firstCat.text.TextColor3 = Theme.TextPrimary
+firstCat.page.Visible = true
+currentCategory = "Телепорты"
+
+-- ═══════════════════════════════════════
+-- === УВЕДОМЛЕНИЕ ===
+-- ═══════════════════════════════════════
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "⛵ BaBFT Premium",
+        Text = "Загружено! RightShift — скрыть/показать",
+        Duration = 5,
+        Icon = "rbxassetid://4483345998"
+    })
+end)
+
+print("══════════════════════════════════")
+print("  ⛵ Build a Boat Premium v3.0")
+print("  ✅ Успешно загружен!")
+print("  🔑 RightShift — скрыть GUI")
+print("  📂 7 категорий • 30+ функций")
+print("══════════════════════════════════")

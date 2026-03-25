@@ -1,0 +1,408 @@
+-- Sound Finder GUI
+-- Находит ВСЕ звуки в игре и показывает Name + ID
+
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Удаляем старый GUI если есть
+if playerGui:FindFirstChild("SoundFinderGui") then
+    playerGui.SoundFinderGui:Destroy()
+end
+
+----------------------------------------------------------------
+-- СОЗДАНИЕ GUI
+----------------------------------------------------------------
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SoundFinderGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+-- Тень
+local shadow = Instance.new("Frame")
+shadow.Size = UDim2.new(0, 560, 0, 410)
+shadow.Position = UDim2.new(0.5, -272, 0.5, -197)
+shadow.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+shadow.BackgroundTransparency = 0.5
+shadow.BorderSizePixel = 0
+shadow.Parent = screenGui
+Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 12)
+
+-- Основной фрейм
+local mainFrame = Instance.new("Frame")
+mainFrame.Name = "Main"
+mainFrame.Size = UDim2.new(0, 550, 0, 400)
+mainFrame.Position = UDim2.new(0.5, -275, 0.5, -200)
+mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+mainFrame.BorderSizePixel = 0
+mainFrame.Parent = screenGui
+Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 10)
+
+-- Перетаскивание окна
+local dragging, dragStart, startPos
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+    end
+end)
+
+mainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+        shadow.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X + 3,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y + 3
+        )
+    end
+end)
+
+----------------------------------------------------------------
+-- ЗАГОЛОВОК
+----------------------------------------------------------------
+local topBar = Instance.new("Frame")
+topBar.Size = UDim2.new(1, 0, 0, 45)
+topBar.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+topBar.BorderSizePixel = 0
+topBar.Parent = mainFrame
+Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 10)
+
+-- Нижний фикс для заголовка (убрать скругление снизу)
+local topBarFix = Instance.new("Frame")
+topBarFix.Size = UDim2.new(1, 0, 0, 10)
+topBarFix.Position = UDim2.new(0, 0, 1, -10)
+topBarFix.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+topBarFix.BorderSizePixel = 0
+topBarFix.Parent = topBar
+
+local titleLabel = Instance.new("TextLabel")
+titleLabel.Name = "Title"
+titleLabel.Size = UDim2.new(1, -90, 1, 0)
+titleLabel.Position = UDim2.new(0, 15, 0, 0)
+titleLabel.BackgroundTransparency = 1
+titleLabel.Text = "🔊 Sound Finder — Загрузка..."
+titleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+titleLabel.TextSize = 17
+titleLabel.Font = Enum.Font.GothamBold
+titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+titleLabel.Parent = topBar
+
+-- Кнопка обновить
+local refreshBtn = Instance.new("TextButton")
+refreshBtn.Size = UDim2.new(0, 35, 0, 30)
+refreshBtn.Position = UDim2.new(1, -80, 0, 7)
+refreshBtn.BackgroundColor3 = Color3.fromRGB(60, 130, 255)
+refreshBtn.Text = "🔄"
+refreshBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+refreshBtn.TextSize = 16
+refreshBtn.Font = Enum.Font.GothamBold
+refreshBtn.BorderSizePixel = 0
+refreshBtn.Parent = topBar
+Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0, 6)
+
+-- Кнопка закрыть
+local closeBtn = Instance.new("TextButton")
+closeBtn.Size = UDim2.new(0, 35, 0, 30)
+closeBtn.Position = UDim2.new(1, -42, 0, 7)
+closeBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 50)
+closeBtn.Text = "✕"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.TextSize = 16
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.BorderSizePixel = 0
+closeBtn.Parent = topBar
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 6)
+
+closeBtn.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+----------------------------------------------------------------
+-- ПОИСК (SEARCH BAR)
+----------------------------------------------------------------
+local searchFrame = Instance.new("Frame")
+searchFrame.Size = UDim2.new(1, -20, 0, 30)
+searchFrame.Position = UDim2.new(0, 10, 0, 50)
+searchFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+searchFrame.BorderSizePixel = 0
+searchFrame.Parent = mainFrame
+Instance.new("UICorner", searchFrame).CornerRadius = UDim.new(0, 6)
+
+local searchBox = Instance.new("TextBox")
+searchBox.Size = UDim2.new(1, -10, 1, 0)
+searchBox.Position = UDim2.new(0, 10, 0, 0)
+searchBox.BackgroundTransparency = 1
+searchBox.PlaceholderText = "🔍 Поиск по названию или ID..."
+searchBox.PlaceholderColor3 = Color3.fromRGB(120, 120, 140)
+searchBox.Text = ""
+searchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+searchBox.TextSize = 13
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextXAlignment = Enum.TextXAlignment.Left
+searchBox.ClearTextOnFocus = false
+searchBox.Parent = searchFrame
+
+----------------------------------------------------------------
+-- КОЛОНКИ (ЗАГОЛОВКИ ТАБЛИЦЫ)
+----------------------------------------------------------------
+local columnsBar = Instance.new("Frame")
+columnsBar.Size = UDim2.new(1, -20, 0, 25)
+columnsBar.Position = UDim2.new(0, 10, 0, 85)
+columnsBar.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+columnsBar.BorderSizePixel = 0
+columnsBar.Parent = mainFrame
+Instance.new("UICorner", columnsBar).CornerRadius = UDim.new(0, 4)
+
+local colTexts = {
+    {text = "#",      pos = UDim2.new(0, 5, 0, 0),   size = UDim2.new(0, 30, 1, 0)},
+    {text = "Имя",    pos = UDim2.new(0, 35, 0, 0),  size = UDim2.new(0, 150, 1, 0)},
+    {text = "Sound ID", pos = UDim2.new(0, 190, 0, 0), size = UDim2.new(0, 190, 1, 0)},
+    {text = "Действия", pos = UDim2.new(0, 385, 0, 0), size = UDim2.new(0, 140, 1, 0)},
+}
+
+for _, col in ipairs(colTexts) do
+    local label = Instance.new("TextLabel")
+    label.Size = col.size
+    label.Position = col.pos
+    label.BackgroundTransparency = 1
+    label.Text = col.text
+    label.TextColor3 = Color3.fromRGB(180, 180, 220)
+    label.TextSize = 12
+    label.Font = Enum.Font.GothamBold
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = columnsBar
+end
+
+----------------------------------------------------------------
+-- СПИСОК ЗВУКОВ (SCROLL)
+----------------------------------------------------------------
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, -20, 1, -120)
+scrollFrame.Position = UDim2.new(0, 10, 0, 115)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.ScrollBarThickness = 5
+scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 255)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+scrollFrame.BorderSizePixel = 0
+scrollFrame.Parent = mainFrame
+
+local listLayout = Instance.new("UIListLayout")
+listLayout.Padding = UDim.new(0, 3)
+listLayout.Parent = scrollFrame
+
+----------------------------------------------------------------
+-- ФУНКЦИЯ: СОЗДАТЬ СТРОКУ ЗВУКА
+----------------------------------------------------------------
+local function createSoundRow(index, sound)
+    local soundId = tostring(sound.SoundId)
+    local soundName = sound.Name
+
+    local row = Instance.new("Frame")
+    row.Name = "Sound_" .. index
+    row.Size = UDim2.new(1, -5, 0, 40)
+    row.BackgroundColor3 = index % 2 == 0 
+        and Color3.fromRGB(35, 35, 48) 
+        or Color3.fromRGB(30, 30, 42)
+    row.BorderSizePixel = 0
+    row.Parent = scrollFrame
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 5)
+
+    -- Номер
+    local numLabel = Instance.new("TextLabel")
+    numLabel.Size = UDim2.new(0, 30, 1, 0)
+    numLabel.Position = UDim2.new(0, 5, 0, 0)
+    numLabel.BackgroundTransparency = 1
+    numLabel.Text = tostring(index)
+    numLabel.TextColor3 = Color3.fromRGB(100, 100, 130)
+    numLabel.TextSize = 12
+    numLabel.Font = Enum.Font.GothamBold
+    numLabel.TextXAlignment = Enum.TextXAlignment.Left
+    numLabel.Parent = row
+
+    -- Имя звука
+    local nameLabel = Instance.new("TextLabel")
+    nameLabel.Size = UDim2.new(0, 150, 1, 0)
+    nameLabel.Position = UDim2.new(0, 35, 0, 0)
+    nameLabel.BackgroundTransparency = 1
+    nameLabel.Text = soundName
+    nameLabel.TextColor3 = Color3.fromRGB(100, 220, 255)
+    nameLabel.TextSize = 12
+    nameLabel.Font = Enum.Font.GothamBold
+    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    nameLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    nameLabel.Parent = row
+
+    -- Sound ID
+    local idLabel = Instance.new("TextLabel")
+    idLabel.Size = UDim2.new(0, 190, 1, 0)
+    idLabel.Position = UDim2.new(0, 190, 0, 0)
+    idLabel.BackgroundTransparency = 1
+    idLabel.Text = soundId
+    idLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+    idLabel.TextSize = 11
+    idLabel.Font = Enum.Font.Gotham
+    idLabel.TextXAlignment = Enum.TextXAlignment.Left
+    idLabel.TextTruncate = Enum.TextTruncate.AtEnd
+    idLabel.Parent = row
+
+    -- Кнопка PLAY ▶
+    local playBtn = Instance.new("TextButton")
+    playBtn.Size = UDim2.new(0, 30, 0, 26)
+    playBtn.Position = UDim2.new(0, 385, 0, 7)
+    playBtn.BackgroundColor3 = Color3.fromRGB(50, 170, 50)
+    playBtn.Text = "▶"
+    playBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    playBtn.TextSize = 14
+    playBtn.Font = Enum.Font.GothamBold
+    playBtn.BorderSizePixel = 0
+    playBtn.Parent = row
+    Instance.new("UICorner", playBtn).CornerRadius = UDim.new(0, 5)
+
+    playBtn.MouseButton1Click:Connect(function()
+        sound:Play()
+        playBtn.BackgroundColor3 = Color3.fromRGB(30, 130, 30)
+        wait(0.3)
+        playBtn.BackgroundColor3 = Color3.fromRGB(50, 170, 50)
+    end)
+
+    -- Кнопка STOP ⏹
+    local stopBtn = Instance.new("TextButton")
+    stopBtn.Size = UDim2.new(0, 30, 0, 26)
+    stopBtn.Position = UDim2.new(0, 420, 0, 7)
+    stopBtn.BackgroundColor3 = Color3.fromRGB(200, 55, 55)
+    stopBtn.Text = "⏹"
+    stopBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    stopBtn.TextSize = 14
+    stopBtn.Font = Enum.Font.GothamBold
+    stopBtn.BorderSizePixel = 0
+    stopBtn.Parent = row
+    Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 5)
+
+    stopBtn.MouseButton1Click:Connect(function()
+        sound:Stop()
+    end)
+
+    -- Кнопка COPY 📋
+    local copyBtn = Instance.new("TextButton")
+    copyBtn.Size = UDim2.new(0, 60, 0, 26)
+    copyBtn.Position = UDim2.new(0, 455, 0, 7)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 170)
+    copyBtn.Text = "📋 Copy"
+    copyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    copyBtn.TextSize = 11
+    copyBtn.Font = Enum.Font.GothamBold
+    copyBtn.BorderSizePixel = 0
+    copyBtn.Parent = row
+    Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0, 5)
+
+    copyBtn.MouseButton1Click:Connect(function()
+        if setclipboard then
+            setclipboard(soundId)
+        elseif toclipboard then
+            toclipboard(soundId)
+        end
+        copyBtn.Text = "✅"
+        copyBtn.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+        wait(1)
+        copyBtn.Text = "📋 Copy"
+        copyBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 170)
+    end)
+
+    return row
+end
+
+----------------------------------------------------------------
+-- СКАНИРОВАНИЕ ЗВУКОВ
+----------------------------------------------------------------
+local allSounds = {}
+local allRows = {}
+
+local function scanSounds()
+    allSounds = {}
+
+    local locations = {
+        game.Workspace,
+        game.SoundService,
+        game.Lighting,
+        game.ReplicatedStorage,
+        game.StarterGui,
+        game.StarterPack,
+        game.StarterPlayer,
+    }
+
+    -- Пробуем добавить ReplicatedFirst
+    pcall(function()
+        table.insert(locations, game.ReplicatedFirst)
+    end)
+
+    for _, location in ipairs(locations) do
+        pcall(function()
+            for _, obj in ipairs(location:GetDescendants()) do
+                if obj:IsA("Sound") then
+                    table.insert(allSounds, obj)
+                end
+            end
+        end)
+    end
+end
+
+local function renderSounds(filter)
+    -- Очищаем старые строки
+    for _, row in ipairs(allRows) do
+        if row and row.Parent then
+            row:Destroy()
+        end
+    end
+    allRows = {}
+
+    local count = 0
+    for i, sound in ipairs(allSounds) do
+        local soundName = sound.Name:lower()
+        local soundId = tostring(sound.SoundId):lower()
+        local query = (filter or ""):lower()
+
+        if query == "" or soundName:find(query, 1, true) or soundId:find(query, 1, true) then
+            count = count + 1
+            local row = createSoundRow(count, sound)
+            table.insert(allRows, row)
+        end
+    end
+
+    -- Обновляем CanvasSize
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, count * 43 + 10)
+
+    -- Обновляем заголовок
+    titleLabel.Text = "🔊 Sound Finder — Найдено: " .. count
+end
+
+----------------------------------------------------------------
+-- ЗАПУСК
+----------------------------------------------------------------
+scanSounds()
+renderSounds("")
+
+-- Поиск
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    renderSounds(searchBox.Text)
+end)
+
+-- Кнопка обновить
+refreshBtn.MouseButton1Click:Connect(function()
+    refreshBtn.Text = "⏳"
+    wait(0.2)
+    scanSounds()
+    renderSounds(searchBox.Text)
+    refreshBtn.Text = "🔄"
+end)
+
+print("[Sound Finder] Загружено! Найдено " .. #allSounds .. " звуков.")
